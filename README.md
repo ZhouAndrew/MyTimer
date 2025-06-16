@@ -88,3 +88,19 @@
 | 客户端（移动端）   | Flutter + PWA 支持                         |
 | 本地存储          | JSON 配置文件 / SQLite                    |
 | 通知实现          | Web Notification API / `plyer` / `notify-send` |
+
+## 🧭 ServerDiscovery 模块示例
+
+本仓库提供 `server_discovery.py` 用于在局域网内自动发现服务端。示例的实现基于 UDP 广播：
+
+```bash
+# 终端 1：启动模拟服务器
+python mock_server.py
+
+# 终端 2：运行发现脚本
+python server_discovery.py
+```
+
+脚本会在 3 秒内等待服务器响应，并打印发现的服务器 IP 地址；若未发现则输出 `No server found`。
+
+`test_discovery.py` 演示了如何在代码中启动模拟服务器并调用发现函数，可用于简单的功能测试。
