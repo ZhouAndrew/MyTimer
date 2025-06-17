@@ -5,9 +5,9 @@ from __future__ import annotations
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from fastapi import HTTPException
-from typing import List, Dict
+from typing import List
 
-from timer_manager import TimerManager, Timer
+from timer_manager import TimerManager
 
 app = FastAPI()
 
