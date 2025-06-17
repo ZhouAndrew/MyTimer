@@ -1,4 +1,6 @@
 # MyTimer
+[项目进度](REARMED.md) | [Project Progress 中文版](REARMED.zh.md) | [详细教程](TUTORIAL.md)
+
 
 ## 📋 项目概览
 
@@ -116,3 +118,4 @@ python server_discovery.py
 
 代码中已加入详细的 Docstring，阅读源码即可了解各函数与类的用途。
 更多使用细节请参考 [《MyTimer 教程》](TUTORIAL.md)。
+如需查看开发进度，请访问 [REARMED.md](REARMED.md) 或 [中文版](REARMED.zh.md)。
