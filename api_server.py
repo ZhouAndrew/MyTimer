@@ -1,3 +1,5 @@
+"""FastAPI 服务端实现计时器的 REST 与 WebSocket 接口。"""
+
 from __future__ import annotations
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -15,6 +17,8 @@ manager = TimerManager()
 websockets: List[WebSocket] = []
 
 async def broadcast_state() -> None:
+    """Send the current timer state to all connected WebSocket clients."""
+
     data = {
         timer_id: {
             "duration": timer.duration,
@@ -32,12 +36,15 @@ async def broadcast_state() -> None:
 
 @app.post("/timers")
 async def create_timer(duration: float):
+    """Create a new timer with the given duration in seconds."""
+
     timer_id = manager.create_timer(duration)
     await broadcast_state()
     return {"timer_id": timer_id}
 
 @app.get("/timers")
 async def list_timers():
+    """Return the state of all existing timers."""
     return {
         timer_id: {
             "duration": timer.duration,
@@ -50,6 +57,7 @@ async def list_timers():
 
 @app.post("/timers/{timer_id}/pause")
 async def pause_timer(timer_id: int):
+    """Pause a running timer."""
     if timer_id not in manager.timers:
         raise HTTPException(status_code=404, detail="Timer not found")
     manager.pause_timer(timer_id)
@@ -58,6 +66,7 @@ async def pause_timer(timer_id: int):
 
 @app.post("/timers/{timer_id}/resume")
 async def resume_timer(timer_id: int):
+    """Resume a paused timer."""
     if timer_id not in manager.timers:
         raise HTTPException(status_code=404, detail="Timer not found")
     manager.resume_timer(timer_id)
@@ -66,6 +75,7 @@ async def resume_timer(timer_id: int):
 
 @app.delete("/timers/{timer_id}")
 async def remove_timer(timer_id: int):
+    """Remove a timer from the manager."""
     if timer_id not in manager.timers:
         raise HTTPException(status_code=404, detail="Timer not found")
     manager.remove_timer(timer_id)
@@ -74,12 +84,14 @@ async def remove_timer(timer_id: int):
 
 @app.post("/tick")
 async def tick(seconds: float):
+    """Advance all timers by ``seconds``."""
     manager.tick(seconds)
     await broadcast_state()
     return {"status": "ticked"}
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
+    """WebSocket endpoint for real-time timer updates."""
     await ws.accept()
     websockets.append(ws)
     try:
