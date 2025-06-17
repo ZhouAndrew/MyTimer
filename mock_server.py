@@ -1,3 +1,5 @@
+"""Mock UDP server used for discovery tests."""
+
 import socket
 
 BROADCAST_PORT = 9999
@@ -6,6 +8,7 @@ RESPONSE_MESSAGE = b'SERVER_HERE'
 
 
 def run_mock_server():
+    """Listen for discovery broadcasts and reply with a predefined message."""
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(('', BROADCAST_PORT))
