@@ -61,3 +61,14 @@ def test_websocket_receives_updates():
         message = ws.receive_json()
         tid = str(timer_id)
         assert message[tid]['remaining'] == 2
+
+
+def test_create_timer_invalid_duration():
+    resp = client.post('/timers', params={'duration': -1})
+    assert resp.status_code == 400
+    assert resp.json()['detail'] == 'Duration must be positive'
+
+
+def test_pause_invalid_timer():
+    resp = client.post('/timers/999/pause')
+    assert resp.status_code == 404
