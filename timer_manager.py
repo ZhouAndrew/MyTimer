@@ -33,10 +33,22 @@ class TimerManager:
         self._next_id = 1
 
     def create_timer(self, duration: float) -> int:
-        """Create a new timer and return its identifier."""
+        """Create a new timer and return its identifier.
+
+        A duration less than or equal to zero will create a timer that is
+        immediately finished. This mirrors the behaviour of ticking a timer
+        down to zero but avoids exposing negative remaining times.
+        """
+
         timer_id = self._next_id
         self._next_id += 1
-        self.timers[timer_id] = Timer(duration=duration, remaining=duration)
+
+        if duration <= 0:
+            timer = Timer(duration=duration, remaining=0, running=False, finished=True)
+        else:
+            timer = Timer(duration=duration, remaining=duration)
+
+        self.timers[timer_id] = timer
         return timer_id
 
     def tick(self, seconds: float) -> None:

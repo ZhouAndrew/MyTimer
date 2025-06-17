@@ -38,6 +38,9 @@ async def broadcast_state() -> None:
 async def create_timer(duration: float):
     """Create a new timer with the given duration in seconds."""
 
+    if duration <= 0:
+        raise HTTPException(status_code=400, detail="Duration must be positive")
+
     timer_id = manager.create_timer(duration)
     await broadcast_state()
     return {"timer_id": timer_id}

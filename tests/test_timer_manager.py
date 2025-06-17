@@ -41,3 +41,16 @@ def test_remove_timer():
     timer_id = tm.create_timer(10)
     tm.remove_timer(timer_id)
     assert timer_id not in tm.timers
+
+
+def test_create_timer_non_positive_duration():
+    tm = TimerManager()
+    tid_zero = tm.create_timer(0)
+    zero_timer = tm.timers[tid_zero]
+    assert zero_timer.remaining == 0
+    assert zero_timer.finished
+
+    tid_neg = tm.create_timer(-5)
+    neg_timer = tm.timers[tid_neg]
+    assert neg_timer.remaining == 0
+    assert neg_timer.finished
