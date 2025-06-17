@@ -1,3 +1,5 @@
+"""Client utility for discovering UDP broadcast servers on the local network."""
+
 import asyncio
 import socket
 
@@ -7,7 +9,8 @@ DISCOVERY_MESSAGE = b'DISCOVER_SERVER'
 RESPONSE_MESSAGE = b'SERVER_HERE'
 TIMEOUT = 3
 
-async def discover_server(timeout=TIMEOUT):
+async def discover_server(timeout: int = TIMEOUT):
+    """Broadcast a discovery message and collect responding server IPs."""
     loop = asyncio.get_running_loop()
     found = []
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
@@ -32,6 +35,7 @@ async def discover_server(timeout=TIMEOUT):
     return found
 
 async def main():
+    """Run discovery and print any found servers."""
     servers = await discover_server()
     if servers:
         print('Found servers:')

@@ -104,3 +104,14 @@ python server_discovery.py
 脚本会在 3 秒内等待服务器响应，并打印发现的服务器 IP 地址；若未发现则输出 `No server found`。
 
 `test_discovery.py` 演示了如何在代码中启动模拟服务器并调用发现函数，可用于简单的功能测试。
+
+## 📖 代码结构说明
+
+- `api_server.py`：FastAPI 服务端实现，提供计时器的 REST 接口和 WebSocket 广播。
+- `timer_manager.py`：内部计时器数据结构与管理逻辑。
+- `server_discovery.py`：通过 UDP 广播发现局域网内的服务器。
+- `mock_server.py`：配合发现脚本使用的简易 UDP 模拟服务器。
+- `tests/`：pytest 单元测试，覆盖 API 与计时器管理逻辑。
+
+代码中已加入详细的 Docstring，阅读源码即可了解各函数与类的用途。
+更多使用细节请参考 [《MyTimer 教程》](TUTORIAL.md)。
