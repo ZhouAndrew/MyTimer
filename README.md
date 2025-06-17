@@ -109,6 +109,7 @@ python server_discovery.py
 
 - `api_server.py`：FastAPI 服务端实现，提供计时器的 REST 接口和 WebSocket 广播。
 - `timer_manager.py`：内部计时器数据结构与管理逻辑。
+- `notifier.py`：监控計時器完成並執行自定義回調通知。
 - `server_discovery.py`：通过 UDP 广播发现局域网内的服务器。
 - `mock_server.py`：配合发现脚本使用的简易 UDP 模拟服务器。
 - `tests/`：pytest 单元测试，覆盖 API 与计时器管理逻辑。
