@@ -1,5 +1,5 @@
 # Development To-Do
-[Project Overview](README.md) | [Tutorial](TUTORIAL.md) | [中文版](REARMED.zh.md)
+[Project Overview](README.md) | [Tutorial](TUTORIAL.md) | [中文版](ROADMAP.zh.md)
 
 
 ## Completed
