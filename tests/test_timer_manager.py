@@ -41,3 +41,12 @@ def test_remove_timer():
     timer_id = tm.create_timer(10)
     tm.remove_timer(timer_id)
     assert timer_id not in tm.timers
+
+
+def test_zero_duration_timer_finishes_immediately():
+    tm = TimerManager()
+    timer_id = tm.create_timer(0)
+    timer = tm.timers[timer_id]
+    assert timer.finished
+    assert not timer.running
+    assert timer.remaining == 0
