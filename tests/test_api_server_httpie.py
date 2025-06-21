@@ -36,6 +36,12 @@ def start_server():
 def run_httpie(method, url, *args):
     env = os.environ.copy()
     env["NO_COLOR"] = "1"  # avoid ANSI color codes
+    # Disable update checks which attempt network access
+    temp_dir = os.path.join(os.getcwd(), "httpie_config")
+    os.makedirs(temp_dir, exist_ok=True)
+    with open(os.path.join(temp_dir, "config.json"), "w") as f:
+        json.dump({"disable_update_warnings": True}, f)
+    env["HTTPIE_CONFIG_DIR"] = temp_dir
     cmd = [
         "http",
         "--timeout=5",
