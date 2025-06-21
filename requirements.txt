@@ -5,3 +5,4 @@ requests
 pytest
 pytest-asyncio
 httpie
+rich
