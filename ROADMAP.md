@@ -10,6 +10,7 @@
 ## Pending
 - Implement Notifier module for timer completion alerts.
 - Develop client-side modules (UI, controller, settings, etc.).
+- Add Rich/Textual based CLI interface modules.
 - Expand integration tests for full client/server workflow.
 
 返回 [教程](TUTORIAL.md) 或 [项目概览](README.md)。
