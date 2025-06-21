@@ -3,3 +3,5 @@ uvicorn
 httpx
 requests
 pytest
+pytest-asyncio
+httpie

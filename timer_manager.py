@@ -15,6 +15,12 @@ class Timer:
     running: bool = True
     finished: bool = False
 
+    def __post_init__(self) -> None:
+        if self.duration <= 0:
+            self.remaining = 0
+            self.running = False
+            self.finished = True
+
     def tick(self, seconds: float) -> None:
         """Advance the timer by ``seconds`` if running."""
         if self.running and not self.finished:
