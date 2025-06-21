@@ -26,6 +26,8 @@ async def discover_server(timeout: int = TIMEOUT):
             remain = timeout - (loop.time() - start)
             if remain <= 0:
                 break
+            # ensure blocking time does not exceed remaining timeout
+            sock.settimeout(remain)
             try:
                 data, addr = sock.recvfrom(1024)
             except socket.timeout:
