@@ -5,3 +5,6 @@ requests
 pytest
 pytest-asyncio
 httpie
+rich
+psutil
+websockets
