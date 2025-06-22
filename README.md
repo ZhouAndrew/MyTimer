@@ -6,6 +6,26 @@
 - **项目目标**：构建一个可跨设备同步的倒计时管理系统，支持远程控制、通知推送、实时更新和设置同步。
 - **系统组成**：服务器 + 多客户端（桌面/Web/移动），通过网络通信保持状态同步。
 
+## 🚀 快速开始
+
+1. 安装依赖并运行测试：
+   ```bash
+   pip install -r requirements.txt
+   pytest -q
+   ```
+2. 启动服务器：
+   ```bash
+   uvicorn api_server:app --reload
+   ```
+3. 启动交互式客户端：
+   ```bash
+   python client_controller.py interactive
+   ```
+   或使用图形界面：
+   ```bash
+   python tui_app.py
+   ```
+
 ---
 
 ## ✅ 主要模块与职责（支持并行开发）
@@ -28,29 +48,9 @@
 
 | 模块名称             | 类型    | 功能说明                                      | 可并行 | 依赖                  | 完成情况 |
 |--------------------|---------|-------------------------------------------|--------|---------------------|----------|
-| 🖥️ TUIApp          | Client | 负责启动 Rich/Textual 应用并管理界面布局与事件循环 | ✅     | CLIViewLayer, InputHandler | ❌ |
-| 📊 CLIViewLayer    | Client | 使用表格和面板渲染计时器列表与状态                | ✅     | SyncService        | ❌ |
-| ⌨️ InputHandler    | Client | 解析键盘输入，映射为计时器的控制指令              | ✅     | SyncService        | ❌ |
-| 🔧 CLISettings     | Client | 提供终端设置菜单，保存主题和服务器地址等配置         | ✅     | 本地数据              | ❌ |
-| 🔔 TUINotifier     | Client | 在终端显示提醒，并可调用系统通知                 | ✅     | TimerManager       | ✅ |
-
-### 🗺️ CLI 开发路线图
-
-| 周数     | 目标内容                                   |
-|--------|---------------------------------------|
-| 第 1 周  | 搭建 TUIApp 框架，能显示计时器表格                   |
-| 第 2 周  | 完成键盘控制逻辑，集成 SyncService 实时同步            |
-| 第 3 周  | 加入设置菜单和通知功能，优化界面交互                  |
-| 第 4 周  | 整理文档与测试，准备发布                             |
-
----
-## ✅ CLI 图形界面模块与职责（支持并行开发）
-
-| 模块名称             | 类型    | 功能说明                                      | 可并行 | 依赖                  | 完成情况 |
-|--------------------|---------|-------------------------------------------|--------|---------------------|----------|
-| 🖥️ TUIApp          | Client | 负责启动 Rich/Textual 应用并管理界面布局与事件循环 | ✅     | CLIViewLayer, InputHandler | ❌ |
-| 📊 CLIViewLayer    | Client | 使用表格和面板渲染计时器列表与状态                | ✅     | SyncService        | ❌ |
-| ⌨️ InputHandler    | Client | 解析键盘输入，映射为计时器的控制指令              | ✅     | SyncService        | ❌ |
+| 🖥️ TUIApp          | Client | 负责启动 Rich/Textual 应用并管理界面布局与事件循环 | ✅     | CLIViewLayer, InputHandler | ✅ |
+| 📊 CLIViewLayer    | Client | 使用表格和面板渲染计时器列表与状态  | ✅     | SyncService        | ✅ |
+| ⌨️ InputHandler    | Client | 解析键盘输入，映射为计时器的控制指令 | ✅     | SyncService        | ✅ |
 | 🔧 CLISettings     | Client | 提供终端设置菜单，保存主题和服务器地址等配置         | ✅     | 本地数据              | ❌ |
 | 🔔 TUINotifier     | Client | 在终端显示提醒，并可调用系统通知                 | ✅     | TimerManager       | ✅ |
 

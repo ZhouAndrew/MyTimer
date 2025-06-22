@@ -6,11 +6,11 @@
 - 清理了 `api_server.py` 和测试中的无用导入。
 - 安装了所需依赖。
 - 通过 `pytest -q` 验证所有单元测试均通过。
+- 实现了计时器结束通知模块 `Notifier`。
+- 新增 CLI 模块（`tui_app.py`、`client_view_layer.py`、`input_handler.py`）。
 
 ## 待办
-- 实现计时器结束后的通知模块。
-- 开发客户端相关模块（界面、控制器、设置等）。
-- 增加基于 Rich/Textual 的命令行图形界面模块。
+- 完成 `ClientSettings` 模块并实现配置持久化。
 - 补充端到端测试以覆盖完整的客户端/服务器工作流程。
 
 
