@@ -88,6 +88,8 @@ async def remove_timer(timer_id: int):
 @app.post("/tick")
 async def tick(seconds: float):
     """Advance all timers by ``seconds``."""
+    if seconds < 0:
+        raise HTTPException(status_code=400, detail="seconds must be non-negative")
     manager.tick(seconds)
     await broadcast_state()
     return {"status": "ticked"}

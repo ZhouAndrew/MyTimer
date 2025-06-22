@@ -1,5 +1,6 @@
 import os
 import sys
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from timer_manager import TimerManager
@@ -62,4 +63,11 @@ def test_create_timer_non_positive_duration():
     neg_timer = tm.timers[tid_neg]
     assert neg_timer.remaining == 0
     assert neg_timer.finished
+
+
+def test_tick_negative_seconds():
+    tm = TimerManager()
+    tm.create_timer(5)
+    with pytest.raises(ValueError):
+        tm.tick(-1)
 

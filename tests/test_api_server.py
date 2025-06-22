@@ -70,3 +70,10 @@ def test_create_timer_invalid_duration():
 def test_pause_invalid_timer():
     resp = client.post('/timers/999/pause')
     assert resp.status_code == 404
+
+
+def test_tick_negative_seconds():
+    client.post('/timers', params={'duration': 5})
+    resp = client.post('/tick', params={'seconds': -1})
+    assert resp.status_code == 400
+    assert resp.json()['detail'] == 'seconds must be non-negative'
