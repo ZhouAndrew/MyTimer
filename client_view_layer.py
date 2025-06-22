@@ -1,4 +1,4 @@
-"""Client-side view layer displaying timer states using Rich tables."""
+"""Client-side view layer displaying timer states with Rich tables and panels."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import List
 from rich.console import Console
 from rich.live import Live
 from rich.table import Table
+from rich.panel import Panel
 
 from sync_service import SyncService, TimerState
 
@@ -41,6 +42,18 @@ class ClientViewLayer:
             )
         return table
 
+    def _build_panel(self) -> Panel:
+        """Return a panel summarizing and containing the timer table."""
+        running = sum(
+            1 for t in self.service.state.values() if t.running and not t.finished
+        )
+        paused = sum(
+            1 for t in self.service.state.values() if not t.running and not t.finished
+        )
+        finished = sum(1 for t in self.service.state.values() if t.finished)
+        title = f"Running: {running}  Paused: {paused}  Finished: {finished}"
+        return Panel(self._build_table(), title=title, border_style="blue")
+
     async def _fetch_initial_state(self) -> None:
         resp = await self.service.client.get("/timers")
         resp.raise_for_status()
@@ -53,7 +66,7 @@ class ClientViewLayer:
         await self._fetch_initial_state()
         await asyncio.sleep(0.1)
         console = Console(record=True)
-        console.print(self._build_table())
+        console.print(self._build_panel())
         output = console.export_text()
         await self.service.close()
         return output
@@ -63,10 +76,10 @@ class ClientViewLayer:
         await self.service.connect()
         await self._fetch_initial_state()
         console = Console()
-        with Live(self._build_table(), console=console, refresh_per_second=2) as live:
+        with Live(self._build_panel(), console=console, refresh_per_second=2) as live:
             try:
                 while True:
-                    live.update(self._build_table())
+                    live.update(self._build_panel())
                     await asyncio.sleep(0.5)
             except KeyboardInterrupt:
                 pass

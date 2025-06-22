@@ -41,3 +41,4 @@ def test_client_view_once(start_server):
     )
     assert result.returncode == 0
     assert str(timer_id) in result.stdout
+    assert "Running:" in result.stdout
