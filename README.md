@@ -38,7 +38,7 @@
 | 👤 ClientAuth       | Server  | 客户端鉴权模块，识别设备ID或Token                       | ✅     | APIServer      | ✅ |
 | 🖼️ ClientViewLayer | Client  | 客户端主界面，显示计时器列表与状态、标签、剩余时间等信息         | ✅     | SyncService    | ✅ |
 | 🎮 ClientController | Client  | 接收用户操作指令并通过 API 向服务器发送请求                    | ✅     | APIServer      | ✅ |
-| ⚙️ ClientSettings   | Client  | 设置面板：铃声、通知选项、导入导出配置、本地缓存                    | ✅     | 本地数据        | ❌ |
+| ⚙️ ClientSettings   | Client  | 设置面板：铃声、通知选项、导入导出配置、本地缓存                    | ✅     | 本地数据        | ✅ |
 | 🔁 SyncService      | Client  | 与服务器保持 WebSocket 同步、REST 接口控制                      | ✅     | Server API     | ✅ |
 | 🧭 ServerDiscovery  | Client  | 自动发现局域网服务器，展示服务器连接状态                      | ✅     | 无             | ✅ |
 完成情况说明：✅ 已完成，❌ 未完成
