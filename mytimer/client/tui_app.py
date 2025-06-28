@@ -12,8 +12,8 @@ import argparse
 import asyncio
 from typing import List
 
-from client_view_layer import ClientViewLayer
-from sync_service import SyncService
+from .view_layer import ClientViewLayer
+from .sync_service import SyncService
 
 
 class TUIApp:

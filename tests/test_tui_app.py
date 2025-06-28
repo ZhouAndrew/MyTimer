@@ -9,7 +9,7 @@ import pytest
 def start_server():
     proc = subprocess.Popen([
         "uvicorn",
-        "api_server:app",
+        "mytimer.server.api:app",
         "--host",
         "127.0.0.1",
         "--port",
@@ -35,7 +35,7 @@ def test_tui_app_once(start_server):
     timer_id = resp.json()["timer_id"]
 
     result = subprocess.run(
-        [sys.executable, "tui_app.py", "--once", "--url", "http://127.0.0.1:8004"],
+        [sys.executable, "-m", "mytimer.client.tui_app", "--once", "--url", "http://127.0.0.1:8004"],
         capture_output=True,
         text=True,
     )

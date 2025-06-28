@@ -1,0 +1,17 @@
+Starting server...
+Server started.
+
+$ /root/.pyenv/versions/3.12.10/bin/python -m mytimer.client.controller create 5
+1
+$ /root/.pyenv/versions/3.12.10/bin/python -m mytimer.client.controller list
+{"1": {"duration": 5.0, "remaining": 5.0, "running": true, "finished": false}}
+$ /root/.pyenv/versions/3.12.10/bin/python -m mytimer.client.controller tick 3
+ticked
+$ /root/.pyenv/versions/3.12.10/bin/python -m mytimer.client.controller list
+{"1": {"duration": 5.0, "remaining": 2.0, "running": true, "finished": false}}
+$ /root/.pyenv/versions/3.12.10/bin/python -m mytimer.client.controller remove 1
+removed
+$ /root/.pyenv/versions/3.12.10/bin/python -m mytimer.client.controller list
+{}
+
+Stopping server...

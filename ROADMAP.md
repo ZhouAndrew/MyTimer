@@ -3,7 +3,7 @@
 
 
 ## Completed
-- Cleaned up unused imports in `api_server.py` and tests.
+- Cleaned up unused imports in `mytimer/server/api.py` and tests.
 - Installed required dependencies.
 - Verified that all unit tests pass with `pytest -q`.
 - Implemented `Notifier` for timer completion alerts.

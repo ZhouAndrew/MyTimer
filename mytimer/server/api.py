@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi import HTTPException
 from typing import List
 
-from timer_manager import TimerManager
+from ..core.timer_manager import TimerManager
 
 app = FastAPI()
 

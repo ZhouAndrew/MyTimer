@@ -11,7 +11,7 @@ import pytest
 def start_server():
     proc = subprocess.Popen([
         "uvicorn",
-        "api_server:app",
+        "mytimer.server.api:app",
         "--host",
         "127.0.0.1",
         "--port",
@@ -45,7 +45,7 @@ def test_input_handler_flow(start_server):
         "",  # ensure newline at end
     ])
     proc = subprocess.Popen(
-        [sys.executable, "input_handler.py", "--url", "http://127.0.0.1:8004"],
+        [sys.executable, "-m", "mytimer.client.input_handler", "--url", "http://127.0.0.1:8004"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

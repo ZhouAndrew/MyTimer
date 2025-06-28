@@ -11,7 +11,7 @@ from rich.live import Live
 from rich.table import Table
 from rich.panel import Panel
 
-from sync_service import SyncService, TimerState
+from .sync_service import SyncService, TimerState
 
 
 class ClientViewLayer:

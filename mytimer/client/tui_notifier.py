@@ -12,7 +12,7 @@ from typing import Callable, Awaitable, Set
 from rich.console import Console
 from rich.panel import Panel
 
-from timer_manager import TimerManager
+from ..core.timer_manager import TimerManager
 
 NotifyFunc = Callable[[int, str], Awaitable[None]] | Callable[[int, str], None]
 

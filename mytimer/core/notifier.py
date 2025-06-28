@@ -6,7 +6,7 @@ import asyncio
 import contextlib
 from typing import Awaitable, Callable, Set
 
-from timer_manager import TimerManager
+from .timer_manager import TimerManager
 
 NotifyCallback = Callable[[int], Awaitable[None]]
 

@@ -21,10 +21,10 @@
 
 ## 启动 API 服务
 
-`api_server.py` 使用 FastAPI 实现 REST 与 WebSocket 接口，可通过以下命令启动：
+`mytimer/server/api.py` 使用 FastAPI 实现 REST 与 WebSocket 接口，可通过以下命令启动：
 
 ```bash
-uvicorn api_server:app --reload
+uvicorn mytimer.server.api:app --reload
 ```
 
 默认情况下，服务监听在 `http://127.0.0.1:8000`。您可以使用 `curl` 或任何支持 HTTP 的工具与之交互。
@@ -49,24 +49,24 @@ websocat ws://127.0.0.1:8000/ws
 
 ## 发现局域网服务器
 
-`server_discovery.py` 提供了一个简单的 UDP 广播实现，用于在局域网中寻找服务器：
+`tools/server_discovery.py` 提供了一个简单的 UDP 广播实现，用于在局域网中寻找服务器：
 
 ```bash
-python server_discovery.py
+python -m tools.server_discovery
 ```
 
-脚本将发送广播并在指定超时时间内等待回应，若发现服务器地址，会打印在终端。配合 `mock_server.py` 可以在本地模拟测试。
+脚本将发送广播并在指定超时时间内等待回应，若发现服务器地址，会打印在终端。配合 `tools/mock_server.py` 可以在本地模拟测试。
 
 ## 启动 CLI 客户端
 
 交互式方式：
 ```bash
-python client_controller.py interactive
+python -m mytimer.client.controller interactive
 ```
 
 图形界面：
 ```bash
-python tui_app.py
+python -m mytimer.client.tui_app
 ```
 
 ## 计时器管理逻辑

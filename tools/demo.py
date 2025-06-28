@@ -29,7 +29,7 @@ if __name__ == "__main__":
     print("Starting server...")
     server_proc = subprocess.Popen([
         "uvicorn",
-        "api_server:app",
+        "mytimer.server.api:app",
         "--host",
         "127.0.0.1",
         "--port",
@@ -44,12 +44,12 @@ if __name__ == "__main__":
             sys.exit(1)
         print("Server started.\n")
 
-        run_cmd([sys.executable, "client_controller.py", "create", "5"])
-        run_cmd([sys.executable, "client_controller.py", "list"])
-        run_cmd([sys.executable, "client_controller.py", "tick", "3"])
-        run_cmd([sys.executable, "client_controller.py", "list"])
-        run_cmd([sys.executable, "client_controller.py", "remove", "1"])
-        run_cmd([sys.executable, "client_controller.py", "list"])
+        run_cmd([sys.executable, "-m", "mytimer.client.controller", "create", "5"])
+        run_cmd([sys.executable, "-m", "mytimer.client.controller", "list"])
+        run_cmd([sys.executable, "-m", "mytimer.client.controller", "tick", "3"])
+        run_cmd([sys.executable, "-m", "mytimer.client.controller", "list"])
+        run_cmd([sys.executable, "-m", "mytimer.client.controller", "remove", "1"])
+        run_cmd([sys.executable, "-m", "mytimer.client.controller", "list"])
     finally:
         print("\nStopping server...")
         server_proc.terminate()
