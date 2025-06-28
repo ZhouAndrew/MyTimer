@@ -63,6 +63,7 @@ python -m tools.server_discovery
 ```bash
 python -m mytimer.client.controller interactive
 ```
+进入交互模式后，可输入 `help` 查看所有支持的命令，使用 `quit` 退出。
 
 图形界面：
 ```bash

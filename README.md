@@ -18,13 +18,14 @@
    uvicorn mytimer.server.api:app --reload
    ```
 3. 启动交互式客户端：
-   ```bash
-   python -m mytimer.client.controller interactive
-   ```
-   或使用图形界面：
-   ```bash
-   python -m mytimer.client.tui_app
-   ```
+```bash
+python -m mytimer.client.controller interactive
+```
+交互界面下输入 `help` 可查看所有命令，`quit` 退出。
+或使用图形界面：
+```bash
+python -m mytimer.client.tui_app
+```
 
 ---
 
