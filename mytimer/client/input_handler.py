@@ -8,6 +8,23 @@ import json
 import sys
 from typing import Optional
 
+HELP_TEXT = """\
+Available commands:
+  create <seconds>  create a new timer
+  list              list all timers
+  pause <id>        pause a timer
+  resume <id>       resume a timer
+  remove <id>       remove a timer
+  tick <seconds>    advance all timers
+  help              show this help message
+  quit/exit/q       exit the shell
+"""
+
+
+def print_help() -> None:
+    """Print interactive command help."""
+    print(HELP_TEXT)
+
 from .sync_service import SyncService
 
 
@@ -29,6 +46,9 @@ class InputHandler:
         try:
             if cmd in {"quit", "exit", "q"}:
                 return False
+            if cmd in {"help", "h", "?"}:
+                print_help()
+                return True
             elif cmd == "create" and len(args) == 1:
                 timer_id = await self.service.create_timer(float(args[0]))
                 print(timer_id)
@@ -57,6 +77,8 @@ class InputHandler:
     async def run(self) -> None:
         """Run the interactive command loop."""
         await self.service.connect()
+        if sys.stdin.isatty():
+            print("Type 'help' for available commands. 'quit' to exit.")
         loop = asyncio.get_running_loop()
         try:
             while True:

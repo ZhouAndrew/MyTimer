@@ -8,10 +8,29 @@ from typing import Any
 
 import requests
 
+HELP_TEXT = """\
+Available commands:
+  create <seconds>  create a new timer
+  list              list all timers
+  pause <id>        pause a timer
+  resume <id>       resume a timer
+  remove <id>       remove a timer
+  tick <seconds>    advance all timers
+  help              show this help message
+  quit/exit         exit the shell
+"""
+
+
+def print_help() -> None:
+    """Print interactive command help."""
+    print(HELP_TEXT)
+
 
 def create_timer(base_url: str, duration: float) -> int:
     """Create a new timer and return its identifier."""
-    resp = requests.post(f"{base_url}/timers", params={"duration": duration}, timeout=5)
+    resp = requests.post(
+        f"{base_url}/timers", params={"duration": duration}, timeout=5
+    )
     resp.raise_for_status()
     timer_id = resp.json()["timer_id"]
     print(timer_id)
@@ -57,6 +76,7 @@ def tick(base_url: str, seconds: float) -> None:
 
 def interactive(base_url: str) -> None:
     """Run an interactive shell for sending timer commands."""
+    print("Type 'help' for available commands. 'quit' to exit.")
     while True:
         try:
             line = input(">> ").strip()
@@ -70,6 +90,9 @@ def interactive(base_url: str) -> None:
         cmd = parts[0]
         args = parts[1:]
         try:
+            if cmd in {"help", "h", "?"}:
+                print_help()
+                continue
             if cmd == "create" and len(args) == 1:
                 create_timer(base_url, float(args[0]))
             elif cmd == "list" and not args:
