@@ -22,7 +22,16 @@ class Timer:
             self.finished = True
 
     def tick(self, seconds: float) -> None:
-        """Advance the timer by ``seconds`` if running."""
+        """Advance the timer by ``seconds`` if running.
+
+        Raises
+        ------
+        ValueError
+            If ``seconds`` is negative.
+        """
+        if seconds < 0:
+            raise ValueError("seconds must be non-negative")
+
         if self.running and not self.finished:
             self.remaining -= seconds
             if self.remaining <= 0:
@@ -58,7 +67,15 @@ class TimerManager:
         return timer_id
 
     def tick(self, seconds: float) -> None:
-        """Advance all managed timers."""
+        """Advance all managed timers.
+
+        Raises
+        ------
+        ValueError
+            If ``seconds`` is negative.
+        """
+        if seconds < 0:
+            raise ValueError("seconds must be non-negative")
         for timer in list(self.timers.values()):
             timer.tick(seconds)
 
