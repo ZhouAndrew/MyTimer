@@ -57,6 +57,18 @@ python server_discovery.py
 
 脚本将发送广播并在指定超时时间内等待回应，若发现服务器地址，会打印在终端。配合 `mock_server.py` 可以在本地模拟测试。
 
+## 启动 CLI 客户端
+
+交互式方式：
+```bash
+python client_controller.py interactive
+```
+
+图形界面：
+```bash
+python tui_app.py
+```
+
 ## 计时器管理逻辑
 
 `TimerManager` 维护多个计时器对象，每次调用 `tick` 时推进所有计时器的剩余时间。计时器结束时会自动停止运行。您可以根据需要扩展计时器完成后的通知逻辑。
