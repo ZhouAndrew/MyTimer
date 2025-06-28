@@ -63,3 +63,30 @@ def test_create_timer_non_positive_duration():
     assert neg_timer.remaining == 0
     assert neg_timer.finished
 
+
+def test_tick_after_finish_no_change():
+    tm = TimerManager()
+    timer_id = tm.create_timer(1)
+    tm.tick(1)
+    assert tm.timers[timer_id].finished
+    tm.tick(5)
+    assert tm.timers[timer_id].remaining == 0
+    assert tm.timers[timer_id].finished
+
+
+def test_pause_resume_finished_timer_does_nothing():
+    tm = TimerManager()
+    timer_id = tm.create_timer(1)
+    tm.tick(1)
+    tm.pause_timer(timer_id)
+    assert not tm.timers[timer_id].running
+    tm.resume_timer(timer_id)
+    assert not tm.timers[timer_id].running
+
+
+def test_tick_zero_seconds():
+    tm = TimerManager()
+    timer_id = tm.create_timer(5)
+    tm.tick(0)
+    assert tm.timers[timer_id].remaining == 5
+
