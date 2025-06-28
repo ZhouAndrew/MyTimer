@@ -8,7 +8,7 @@ import json
 import sys
 from typing import Optional
 
-from sync_service import SyncService
+from .sync_service import SyncService
 
 
 class InputHandler:

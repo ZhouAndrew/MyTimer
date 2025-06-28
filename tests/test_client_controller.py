@@ -10,7 +10,7 @@ import pytest
 def start_server():
     proc = subprocess.Popen([
         "uvicorn",
-        "api_server:app",
+        "mytimer.server.api:app",
         "--host",
         "127.0.0.1",
         "--port",
@@ -32,7 +32,7 @@ def start_server():
 
 
 def run_cli(*args: str) -> str:
-    cmd = [sys.executable, "client_controller.py", "--url", "http://127.0.0.1:8003", *args]
+    cmd = [sys.executable, "-m", "mytimer.client.controller", "--url", "http://127.0.0.1:8003", *args]
     result = subprocess.run(cmd, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     return result.stdout.strip()
@@ -60,7 +60,7 @@ def test_cli_flow(start_server):
 
 def test_interactive_quit(start_server):
     proc = subprocess.Popen(
-        [sys.executable, "client_controller.py", "--url", "http://127.0.0.1:8003", "interactive"],
+        [sys.executable, "-m", "mytimer.client.controller", "--url", "http://127.0.0.1:8003", "interactive"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

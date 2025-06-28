@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
 
-from client_auth import ClientAuth
+from mytimer.server.client_auth import ClientAuth
 
 
 def create_app_and_auth():

@@ -3,7 +3,7 @@ import sys
 import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from timer_manager import TimerManager
+from mytimer.core.timer_manager import TimerManager
 
 
 def test_create_timer():

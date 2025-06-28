@@ -15,15 +15,15 @@
    ```
 2. 启动服务器：
    ```bash
-   uvicorn api_server:app --reload
+   uvicorn mytimer.server.api:app --reload
    ```
 3. 启动交互式客户端：
    ```bash
-   python client_controller.py interactive
+   python -m mytimer.client.controller interactive
    ```
    或使用图形界面：
    ```bash
-   python tui_app.py
+   python -m mytimer.client.tui_app
    ```
 
 ---
@@ -133,27 +133,27 @@
 
 ## 🧭 ServerDiscovery 模块示例
 
-本仓库提供 `server_discovery.py` 用于在局域网内自动发现服务端。示例的实现基于 UDP 广播：
+本仓库提供 `tools/server_discovery.py` 用于在局域网内自动发现服务端。示例的实现基于 UDP 广播：
 
 ```bash
 # 终端 1：启动模拟服务器
-python mock_server.py
+python -m tools.mock_server
 
 # 终端 2：运行发现脚本
-python server_discovery.py
+python -m tools.server_discovery
 ```
 
 脚本会在 3 秒内等待服务器响应，并打印发现的服务器 IP 地址；若未发现则输出 `No server found`。
 
-`test_discovery.py` 演示了如何在代码中启动模拟服务器并调用发现函数，可用于简单的功能测试。
+`tools/test_discovery.py` 演示了如何在代码中启动模拟服务器并调用发现函数，可用于简单的功能测试。
 
 ## 📖 代码结构说明
 
-- `api_server.py`：FastAPI 服务端实现，提供计时器的 REST 接口和 WebSocket 广播。
-- `timer_manager.py`：内部计时器数据结构与管理逻辑。
-- `notifier.py`：监控計時器完成並執行自定義回調通知。
-- `server_discovery.py`：通过 UDP 广播发现局域网内的服务器。
-- `mock_server.py`：配合发现脚本使用的简易 UDP 模拟服务器。
+- `mytimer/server/api.py`：FastAPI 服务端实现，提供计时器的 REST 接口和 WebSocket 广播。
+- `mytimer/core/timer_manager.py`：内部计时器数据结构与管理逻辑。
+- `mytimer/core/notifier.py`：监控計時器完成並執行自定義回調通知。
+- `tools/server_discovery.py`：通过 UDP 广播发现局域网内的服务器。
+- `tools/mock_server.py`：配合发现脚本使用的简易 UDP 模拟服务器。
 - `tests/`：pytest 单元测试，覆盖 API 与计时器管理逻辑。
 
 代码中已加入详细的 Docstring，阅读源码即可了解各函数与类的用途。

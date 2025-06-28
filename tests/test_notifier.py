@@ -5,8 +5,8 @@ import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from timer_manager import TimerManager
-from notifier import Notifier
+from mytimer.core.timer_manager import TimerManager
+from mytimer.core.notifier import Notifier
 
 
 @pytest.mark.asyncio

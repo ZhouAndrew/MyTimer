@@ -3,14 +3,14 @@ import time
 import subprocess
 import pytest
 
-from sync_service import SyncService
+from mytimer.client.sync_service import SyncService
 
 
 @pytest.fixture(scope="module", autouse=True)
 def start_server():
     proc = subprocess.Popen([
         "uvicorn",
-        "api_server:app",
+        "mytimer.server.api:app",
         "--host",
         "127.0.0.1",
         "--port",

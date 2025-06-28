@@ -10,7 +10,7 @@ import pytest
 def start_server():
     proc = subprocess.Popen([
         "uvicorn",
-        "api_server:app",
+        "mytimer.server.api:app",
         "--host",
         "127.0.0.1",
         "--port",
