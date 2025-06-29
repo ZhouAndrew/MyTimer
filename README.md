@@ -8,12 +8,17 @@
 
 ## 🚀 快速开始
 
-1. 安装依赖并运行测试：
+1. 安装依赖并运行测试（也可以使用下方的管理脚本）：
    ```bash
    pip install -r requirements.txt
    pytest -q
    ```
-2. 启动服务器：
+   或执行
+   ```bash
+   python tools/manage.py install
+   python tools/manage.py test
+   ```
+2. 启动服务器（或使用 `python tools/manage.py start`）：
    ```bash
    uvicorn mytimer.server.api:app --reload
    ```
