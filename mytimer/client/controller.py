@@ -27,6 +27,12 @@ def print_help() -> None:
     print(HELP_TEXT)
 
 
+def handle_request_error(exc: requests.RequestException, base_url: str) -> None:
+    """Display a friendly message when the API server cannot be reached."""
+    print(f"Failed to contact server at {base_url}: {exc}")
+    print("Run 'python -m tools.server_discovery' to search for available servers.")
+
+
 def create_timer(base_url: str, duration: float) -> int:
     """Create a new timer and return its identifier."""
     resp = requests.post(
@@ -111,6 +117,8 @@ def interactive(base_url: str) -> None:
                 print("Unknown command")
         except requests.HTTPError as exc:
             print(f"Error: {exc.response.status_code}")
+        except requests.RequestException as exc:
+            handle_request_error(exc, base_url)
 
 
 def main() -> None:
@@ -121,23 +129,27 @@ def main() -> None:
     parsed = parser.parse_args()
 
     base_url = parsed.url.rstrip("/")
-
-    if parsed.command == "create" and len(parsed.args) == 1:
-        create_timer(base_url, float(parsed.args[0]))
-    elif parsed.command == "list" and len(parsed.args) == 0:
-        list_timers(base_url)
-    elif parsed.command == "pause" and len(parsed.args) == 1:
-        pause_timer(base_url, int(parsed.args[0]))
-    elif parsed.command == "resume" and len(parsed.args) == 1:
-        resume_timer(base_url, int(parsed.args[0]))
-    elif parsed.command == "remove" and len(parsed.args) == 1:
-        remove_timer(base_url, int(parsed.args[0]))
-    elif parsed.command == "tick" and len(parsed.args) == 1:
-        tick(base_url, float(parsed.args[0]))
-    elif parsed.command == "interactive" or parsed.command is None:
-        interactive(base_url)
-    else:
-        parser.print_help()
+    try:
+        if parsed.command == "create" and len(parsed.args) == 1:
+            create_timer(base_url, float(parsed.args[0]))
+        elif parsed.command == "list" and len(parsed.args) == 0:
+            list_timers(base_url)
+        elif parsed.command == "pause" and len(parsed.args) == 1:
+            pause_timer(base_url, int(parsed.args[0]))
+        elif parsed.command == "resume" and len(parsed.args) == 1:
+            resume_timer(base_url, int(parsed.args[0]))
+        elif parsed.command == "remove" and len(parsed.args) == 1:
+            remove_timer(base_url, int(parsed.args[0]))
+        elif parsed.command == "tick" and len(parsed.args) == 1:
+            tick(base_url, float(parsed.args[0]))
+        elif parsed.command == "interactive" or parsed.command is None:
+            interactive(base_url)
+        else:
+            parser.print_help()
+    except requests.HTTPError as exc:
+        print(f"Error: {exc.response.status_code}")
+    except requests.RequestException as exc:
+        handle_request_error(exc, base_url)
 
 
 if __name__ == "__main__":
