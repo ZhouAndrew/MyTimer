@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import time
+import signal
 import requests
 import pytest
 
@@ -41,3 +42,19 @@ def test_tui_app_once(start_server):
     )
     assert result.returncode == 0
     assert str(timer_id) in result.stdout
+
+
+def test_tui_app_live_interrupt(start_server):
+    requests.post("http://127.0.0.1:8004/timers", params={"duration": 3}, timeout=5)
+
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "mytimer.client.tui_app", "--url", "http://127.0.0.1:8004"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    time.sleep(1.5)
+    proc.send_signal(signal.SIGINT)
+    stdout, _ = proc.communicate(timeout=5)
+    assert proc.returncode in (-2, 130, 0)
+    assert "Timer Dashboard" in stdout
