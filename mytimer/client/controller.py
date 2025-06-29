@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from typing import Any
 
 import requests
@@ -76,7 +77,8 @@ def tick(base_url: str, seconds: float) -> None:
 
 def interactive(base_url: str) -> None:
     """Run an interactive shell for sending timer commands."""
-    print("Type 'help' for available commands. 'quit' to exit.")
+    if sys.stdin.isatty():
+        print("Type 'help' for available commands. 'quit' to exit.")
     while True:
         try:
             line = input(">> ").strip()
