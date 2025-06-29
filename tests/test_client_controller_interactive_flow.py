@@ -53,6 +53,8 @@ def test_interactive_flow(start_server):
     stdout, stderr = proc.communicate(cmds, timeout=15)
     assert proc.returncode == 0, stderr
     lines = [l.replace(">> ", "").strip() for l in stdout.splitlines() if l.strip() and l.strip() != ">>"]
+    if lines[0].startswith("Type 'help'"):
+        lines = lines[1:]
     timer_id = int(lines[0])
     state = json.loads(lines[5])
     assert str(timer_id) in state
