@@ -10,11 +10,11 @@
 
 ## 环境准备
 
-1. 安装依赖：
+1. 安装依赖（或使用 `python tools/manage.py install`）：
    ```bash
    pip install -r requirements.txt
    ```
-2. 运行单元测试确保环境正常：
+2. 运行单元测试确保环境正常（或使用 `python tools/manage.py test`）：
    ```bash
    pytest -q
    ```
@@ -26,8 +26,12 @@
 ```bash
 uvicorn mytimer.server.api:app --reload
 ```
+或执行
+```bash
+python tools/manage.py start
+```
 
-默认情况下，服务监听在 `http://127.0.0.1:8000`。您可以使用 `curl` 或任何支持 HTTP 的工具与之交互。
+默认情况下，服务监听在 `http://127.0.0.1:8000`。若要关闭服务器，可以运行 `python tools/manage.py stop`。您可以使用 `curl` 或任何支持 HTTP 的工具与之交互。
 
 ### 创建计时器
 
