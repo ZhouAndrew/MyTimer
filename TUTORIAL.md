@@ -78,6 +78,46 @@ python -m mytimer.client.tui_app
 
 `TimerManager` 维护多个计时器对象，每次调用 `tick` 时推进所有计时器的剩余时间。计时器结束时会自动停止运行。您可以根据需要扩展计时器完成后的通知逻辑。
 
+## 关键文档字符串摘录
+
+为了快速了解代码结构，以下列出部分核心类与方法的 Docstring：
+
+### `mytimer/core/timer_manager.py`
+
+```python
+class Timer:
+    """Simple countdown timer."""
+
+class TimerManager:
+    """Manage multiple :class:`Timer` instances."""
+
+    def create_timer(self, duration: float) -> int:
+        """Create a new timer and return its identifier."""
+
+    def tick(self, seconds: float) -> None:
+        """Advance all managed timers."""
+```
+
+### `mytimer/core/notifier.py`
+
+```python
+class Notifier:
+    """Monitor a :class:`TimerManager` and invoke a callback on timer completion."""
+
+    async def start(self, interval: float = 1.0) -> None:
+        """Start monitoring timers."""
+
+    async def stop(self) -> None:
+        """Stop monitoring timers."""
+```
+
+### `mytimer/client/sync_service.py`
+
+```python
+class SyncService:
+    """Maintain WebSocket sync with the API server and expose REST helpers."""
+```
+
 ## 结语
 
 以上即为 MyTimer 的基本使用方式。阅读源码和 Docstring 可以获取更深入的实现细节。
