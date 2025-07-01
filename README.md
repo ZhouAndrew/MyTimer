@@ -1,5 +1,12 @@
 # MyTimer
-# **THIS IS THE REAL PLAN AND REQUiRMENT FOR THE PROGRAM EVEN THE DOCUMENT(WHICH COULD BE WRONG) IS BASE THIS**
+
+**‼️ NOTE: This is the actual, authoritative plan and requirement for the program.**  
+The document may contain inconsistencies, as it is derived from this plan.  
+📌 Refer to `todo{n}.md` for the most up-to-date and accurate tasks.
+
+> 🚧 当前文档仅供参考，真实计划与需求以 `todo{n}.md` 中为准。请开发和实现过程中优先参考代码任务。
+
+
 [项目进度](ROADMAP.md) | [Project Progress 中文版](ROADMAP.zh.md) | [详细教程](TUTORIAL.md)
 
 ## 📋 项目概览
