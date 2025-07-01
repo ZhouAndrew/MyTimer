@@ -6,6 +6,9 @@ import argparse
 import json
 import sys
 from typing import Any
+from pathlib import Path
+
+from client_settings import ClientSettings
 
 import requests
 
@@ -20,6 +23,27 @@ Available commands:
   help              show this help message
   quit/exit         exit the shell
 """
+
+SETTINGS_PATH = Path.home() / ".timercli" / "settings.json"
+
+
+def _load_settings() -> ClientSettings:
+    return ClientSettings.load(SETTINGS_PATH)
+
+
+def _ring_if_needed(base_url: str) -> None:
+    settings = _load_settings()
+    if not settings.notifications_enabled or not sys.stdout.isatty():
+        return
+    try:
+        resp = requests.get(f"{base_url}/timers", timeout=5)
+        resp.raise_for_status()
+        for t in resp.json().values():
+            if t.get("finished"):
+                print("\a", end="", flush=True)
+                break
+    except requests.RequestException:
+        pass
 
 
 def print_help() -> None:
@@ -79,6 +103,7 @@ def tick(base_url: str, seconds: float) -> None:
     resp = requests.post(f"{base_url}/tick", params={"seconds": seconds}, timeout=5)
     resp.raise_for_status()
     print("ticked")
+    _ring_if_needed(base_url)
 
 
 def interactive(base_url: str) -> None:

@@ -7,6 +7,9 @@ import asyncio
 import json
 import sys
 from typing import Optional
+from pathlib import Path
+
+from client_settings import ClientSettings
 
 HELP_TEXT = """\
 Available commands:
@@ -19,6 +22,28 @@ Available commands:
   help              show this help message
   quit/exit/q       exit the shell
 """
+
+SETTINGS_PATH = Path.home() / ".timercli" / "settings.json"
+
+
+def _load_settings() -> ClientSettings:
+    return ClientSettings.load(SETTINGS_PATH)
+
+
+async def _ring_if_needed(service: "SyncService") -> None:
+    settings = _load_settings()
+    if not settings.notifications_enabled or not sys.stdout.isatty():
+        return
+    try:
+        resp = await service.client.get("/timers")
+        resp.raise_for_status()
+        for t in resp.json().values():
+            if t.get("finished"):
+                print("\a", end="", flush=True)
+                break
+    except Exception:
+        pass
+
 
 
 def print_help() -> None:
@@ -68,6 +93,7 @@ class InputHandler:
             elif cmd == "tick" and len(args) == 1:
                 await self.service.tick(float(args[0]))
                 print("ticked")
+                await _ring_if_needed(self.service)
             else:
                 print("Unknown command")
         except Exception as exc:  # pragma: no cover - unexpected errors

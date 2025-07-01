@@ -9,6 +9,7 @@ import os
 import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 # Ensure the repository root is on ``sys.path`` so imports work when executing
@@ -139,6 +140,24 @@ def run_tui(url: str, once: bool) -> None:
     subprocess.call(cmd)
 
 
+def run_auto_tick(url: str, interval: float) -> None:
+    """Continuously tick the server until interrupted."""
+    server = ensure_server(url)
+    if not server:
+        return
+    print(f"Auto ticking every {interval} seconds. Press Ctrl+C to stop.")
+    try:
+        while True:
+            try:
+                requests.post(f"{server}/tick", params={"seconds": interval}, timeout=5)
+            except requests.RequestException:
+                print("Tick failed")
+                break
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        pass
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="MyTimer management tool")
     sub = parser.add_subparsers(dest="command")
@@ -155,6 +174,10 @@ def main() -> None:
     sub.add_parser("log", help="Show the API server log output")
 
     sub.add_parser("test", help="Run all unit tests")
+
+    auto_p = sub.add_parser("autotick", help="Automatically tick the server")
+    auto_p.add_argument("--url", default="http://127.0.0.1:8000", help="Server base URL")
+    auto_p.add_argument("--interval", type=float, default=1.0, help="Tick interval in seconds")
 
     cli_p = sub.add_parser("cli", help="Run the CLI client")
     cli_p.add_argument("client_args", nargs=argparse.REMAINDER, help="Arguments for the client controller")
@@ -182,6 +205,8 @@ def main() -> None:
         run_controller(args.url, args.client_args)
     elif args.command == "tui":
         run_tui(args.url, args.once)
+    elif args.command == "autotick":
+        run_auto_tick(args.url, args.interval)
     else:
         parser.print_help()
 
