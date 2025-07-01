@@ -14,7 +14,11 @@
    ```bash
    pip install -r requirements.txt
    ```
-2. 运行单元测试确保环境正常（或使用 `python tools/manage.py test`）：
+2. 更新依赖（可选，或使用 `python tools/manage.py update`）：
+   ```bash
+   pip install -U -r requirements.txt
+   ```
+3. 运行单元测试确保环境正常（或使用 `python tools/manage.py test`）：
    ```bash
    pytest -q
    ```

@@ -28,6 +28,19 @@ def run_tests() -> None:
     subprocess.check_call(["pytest", "-q"])
 
 
+def run_update() -> None:
+    """Update dependencies listed in requirements.txt using pip."""
+    subprocess.check_call([
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "-U",
+        "-r",
+        "requirements.txt",
+    ])
+
+
 def start_server(port: int) -> None:
     """Start the API server with uvicorn and save the PID."""
     if PID_FILE.exists():
@@ -105,6 +118,8 @@ def main() -> None:
 
     sub.add_parser("install", help="Install project dependencies")
 
+    sub.add_parser("update", help="Update project dependencies")
+
     start_p = sub.add_parser("start", help="Start the API server")
     start_p.add_argument("--port", type=int, default=8000, help="Server port")
 
@@ -124,6 +139,8 @@ def main() -> None:
 
     if args.command == "install":
         run_install()
+    elif args.command == "update":
+        run_update()
     elif args.command == "start":
         start_server(args.port)
     elif args.command == "stop":
