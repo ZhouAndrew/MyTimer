@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
+import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
 from fastapi import HTTPException
-from typing import List
 
 from ..core.timer_manager import TimerManager
 from .discovery import create_discovery_server
+from .websocket_manager import WebSocketManager
 
 manager = TimerManager()
+ws_manager = WebSocketManager()
+websockets = ws_manager._websockets  # backward compatibility for tests
 
-# store connected websockets
-websockets: List[WebSocket] = []
 discovery = create_discovery_server()
+
+manager.register_on_tick(lambda tid, t: asyncio.create_task(broadcast_update(tid)))
+manager.register_on_finish(lambda tid, t: asyncio.create_task(broadcast_update(tid)))
 
 
 @asynccontextmanager
@@ -41,11 +45,22 @@ async def broadcast_state() -> None:
         }
         for timer_id, timer in manager.timers.items()
     }
-    for ws in list(websockets):
-        try:
-            await ws.send_json(data)
-        except WebSocketDisconnect:
-            websockets.remove(ws)
+    await ws_manager.broadcast_json(data)
+
+async def broadcast_update(timer_id: int) -> None:
+    timer = manager.timers.get(timer_id)
+    if not timer:
+        return
+    await ws_manager.broadcast_json(
+        {
+            "type": "update",
+            "timer_id": str(timer_id),
+            "duration": timer.duration,
+            "remaining": timer.remaining,
+            "running": timer.running,
+            "finished": timer.finished,
+        }
+    )
 
 @app.post("/timers")
 async def create_timer(duration: float):
@@ -110,12 +125,13 @@ async def tick(seconds: float):
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     """WebSocket endpoint for real-time timer updates."""
-    await ws.accept()
-    websockets.append(ws)
+    await ws_manager.connect(ws)
     try:
         while True:
             await ws.receive_text()
     except WebSocketDisconnect:
-        websockets.remove(ws)
+        pass
+    finally:
+        ws_manager.disconnect(ws)
 
 

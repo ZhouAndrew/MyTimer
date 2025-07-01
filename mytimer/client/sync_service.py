@@ -48,9 +48,26 @@ class SyncService:
         try:
             async for message in self._ws:
                 data = json.loads(message)
-                self.state = {
-                    str(tid): TimerState(**info) for tid, info in data.items()
-                }
+                if isinstance(data, dict) and "type" in data:
+                    if data.get("type") == "update":
+                        tid = str(data["timer_id"])
+                        state = self.state.get(tid)
+                        if state:
+                            state.remaining = data["remaining"]
+                            state.running = data.get("running", state.running)
+                            state.finished = data["finished"]
+                            state.duration = data.get("duration", state.duration)
+                        else:
+                            self.state[tid] = TimerState(
+                                duration=data.get("duration", data["remaining"]),
+                                remaining=data["remaining"],
+                                running=data.get("running", not data["finished"]),
+                                finished=data["finished"],
+                            )
+                else:
+                    self.state = {
+                        str(tid): TimerState(**info) for tid, info in data.items()
+                    }
         except websockets.ConnectionClosed:
             pass
 

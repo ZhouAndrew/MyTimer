@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Callable, Awaitable, List
+import asyncio
 
 
 @dataclass
@@ -46,6 +47,16 @@ class TimerManager:
         """Initialize the manager with an empty timer registry."""
         self.timers: Dict[int, Timer] = {}
         self._next_id = 1
+        self._tick_callbacks: List[Callable[[int, Timer], Awaitable[None] | None]] = []
+        self._finish_callbacks: List[Callable[[int, Timer], Awaitable[None] | None]] = []
+
+    def register_on_tick(self, callback: Callable[[int, Timer], Awaitable[None] | None]) -> None:
+        """Register a callback triggered after each timer ``tick``."""
+        self._tick_callbacks.append(callback)
+
+    def register_on_finish(self, callback: Callable[[int, Timer], Awaitable[None] | None]) -> None:
+        """Register a callback when a timer reaches zero."""
+        self._finish_callbacks.append(callback)
 
     def create_timer(self, duration: float) -> int:
         """Create a new timer and return its identifier.
@@ -76,8 +87,13 @@ class TimerManager:
         """
         if seconds < 0:
             raise ValueError("seconds must be non-negative")
-        for timer in list(self.timers.values()):
+
+        for tid, timer in list(self.timers.items()):
+            was_finished = timer.finished
             timer.tick(seconds)
+            self._run_callbacks(self._tick_callbacks, tid, timer)
+            if not was_finished and timer.finished:
+                self._run_callbacks(self._finish_callbacks, tid, timer)
 
     def pause_timer(self, timer_id: int) -> None:
         """Pause the specified timer."""
@@ -94,3 +110,15 @@ class TimerManager:
     def remove_timer(self, timer_id: int) -> None:
         """Remove a timer from the registry."""
         self.timers.pop(timer_id, None)
+
+    def _run_callbacks(self, cbs: List[Callable[[int, Timer], Awaitable[None] | None]], tid: int, timer: Timer) -> None:
+        """Invoke callbacks with ``tid`` and ``timer`` safely."""
+        for cb in cbs:
+            if asyncio.iscoroutinefunction(cb):
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(cb(tid, timer))
+                except RuntimeError:
+                    asyncio.run(cb(tid, timer))
+            else:
+                cb(tid, timer)
