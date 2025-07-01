@@ -23,6 +23,7 @@
    ```bash
    uvicorn mytimer.server.api:app --reload
    ```
+   启动后可使用 `python tools/manage.py log` 查看后台输出。
 3. 启动交互式客户端：
 ```bash
 python -m mytimer.client.controller interactive

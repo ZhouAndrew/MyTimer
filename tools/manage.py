@@ -21,6 +21,7 @@ import requests
 from tools import server_discovery
 
 PID_FILE = Path("server.pid")
+LOG_FILE = Path("server.log")
 
 
 def run_install() -> None:
@@ -53,16 +54,23 @@ def start_server(port: int) -> None:
         return
     env = os.environ.copy()
     env["MYTIMER_API_PORT"] = str(port)
-    proc = subprocess.Popen([
-        "uvicorn",
-        "mytimer.server.api:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        str(port),
-    ], env=env)
+    log_file = open(LOG_FILE, "a")
+    proc = subprocess.Popen(
+        [
+            "uvicorn",
+            "mytimer.server.api:app",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            str(port),
+        ],
+        env=env,
+        stdout=log_file,
+        stderr=subprocess.STDOUT,
+    )
+    log_file.close()
     PID_FILE.write_text(str(proc.pid))
-    print(f"Server started on port {port} (PID {proc.pid})")
+    print(f"Server started on port {port} (PID {proc.pid}). Logs: {LOG_FILE}")
 
 
 def stop_server() -> None:
@@ -77,6 +85,14 @@ def stop_server() -> None:
         pass
     PID_FILE.unlink()
     print("Server stopped")
+
+
+def view_log() -> None:
+    """Display the contents of the server log file."""
+    if not LOG_FILE.exists():
+        print("No log file found")
+        return
+    print(LOG_FILE.read_text())
 
 
 def ensure_server(url: str) -> str | None:
@@ -132,6 +148,8 @@ def main() -> None:
 
     sub.add_parser("stop", help="Stop the running API server")
 
+    sub.add_parser("log", help="Show the API server log output")
+
     sub.add_parser("test", help="Run all unit tests")
 
     cli_p = sub.add_parser("cli", help="Run the CLI client")
@@ -152,6 +170,8 @@ def main() -> None:
         start_server(args.port)
     elif args.command == "stop":
         stop_server()
+    elif args.command == "log":
+        view_log()
     elif args.command == "test":
         run_tests()
     elif args.command == "cli":
