@@ -9,42 +9,59 @@ DISCOVERY_MESSAGE = b'DISCOVER_SERVER'
 RESPONSE_MESSAGE = b'SERVER_HERE'
 TIMEOUT = 3
 
-async def discover_server(timeout: int = TIMEOUT):
-    """Broadcast a discovery message and collect responding server IPs."""
+
+async def discover_server(
+    timeout: int = TIMEOUT,
+    port: int = BROADCAST_PORT,
+    addr: str = BROADCAST_ADDR,
+):
+    """Broadcast a discovery message and collect responding server addresses."""
+
     loop = asyncio.get_running_loop()
-    found = []
+    found: list[tuple[str, int]] = []
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.settimeout(timeout)
         try:
-            sock.sendto(DISCOVERY_MESSAGE, (BROADCAST_ADDR, BROADCAST_PORT))
+            sock.sendto(DISCOVERY_MESSAGE, (addr, port))
         except OSError:
             # Fallback to localhost broadcast when network is restricted
-            sock.sendto(DISCOVERY_MESSAGE, ('127.0.0.1', BROADCAST_PORT))
+            sock.sendto(DISCOVERY_MESSAGE, ("127.0.0.1", port))
         start = loop.time()
         while True:
             remain = timeout - (loop.time() - start)
             if remain <= 0:
                 break
-            # ensure blocking time does not exceed remaining timeout
             sock.settimeout(remain)
             try:
-                data, addr = sock.recvfrom(1024)
+                data, raddr = sock.recvfrom(1024)
             except socket.timeout:
                 break
             if data.startswith(RESPONSE_MESSAGE):
-                found.append(addr[0])
+                parts = data.decode().split()
+                srv_port = int(parts[1]) if len(parts) > 1 else 8000
+                found.append((raddr[0], srv_port))
     return found
 
-async def main():
+async def main() -> None:
     """Run discovery and print any found servers."""
-    servers = await discover_server()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Discover MyTimer servers")
+    parser.add_argument("--timeout", type=int, default=TIMEOUT, help="seconds to wait")
+    parser.add_argument("--port", type=int, default=BROADCAST_PORT, help="discovery port")
+    parser.add_argument(
+        "--address", default=BROADCAST_ADDR, help="broadcast address"
+    )
+    args = parser.parse_args()
+
+    servers = await discover_server(args.timeout, args.port, args.address)
     if servers:
-        print('Found servers:')
-        for ip in servers:
-            print(f'  - {ip}')
+        print("Found servers:")
+        for ip, srv_port in servers:
+            print(f"  - {ip}:{srv_port}")
     else:
-        print('No server found')
+        print("No server found")
 
 if __name__ == '__main__':
     asyncio.run(main())

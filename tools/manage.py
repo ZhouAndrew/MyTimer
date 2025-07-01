@@ -28,6 +28,8 @@ def start_server(port: int) -> None:
     if PID_FILE.exists():
         print("Server already running")
         return
+    env = os.environ.copy()
+    env["MYTIMER_API_PORT"] = str(port)
     proc = subprocess.Popen([
         "uvicorn",
         "mytimer.server.api:app",
@@ -35,7 +37,7 @@ def start_server(port: int) -> None:
         "0.0.0.0",
         "--port",
         str(port),
-    ])
+    ], env=env)
     PID_FILE.write_text(str(proc.pid))
     print(f"Server started on port {port} (PID {proc.pid})")
 
