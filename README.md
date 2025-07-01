@@ -17,8 +17,10 @@
    ```bash
    python tools/manage.py install
    python tools/manage.py update
+   git pull
    python tools/manage.py test
    ```
+   **注意**：`python tools/manage.py update` 仅升级依赖。如需更新程式代码，请执行 `git pull` 或重新下载仓库。
 2. 启动服务器（或使用 `python tools/manage.py start`）：
    ```bash
    uvicorn mytimer.server.api:app --reload

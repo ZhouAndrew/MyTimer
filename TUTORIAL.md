@@ -15,9 +15,10 @@
    pip install -r requirements.txt
    ```
 2. 更新依赖（可选，或使用 `python tools/manage.py update`）：
-   ```bash
-   pip install -U -r requirements.txt
-   ```
+    ```bash
+    pip install -U -r requirements.txt
+    ```
+    `update` 命令仅用于更新依赖。如需获得最新的程序代码，请执行 `git pull` 或重新下载仓库。
 3. 运行单元测试确保环境正常（或使用 `python tools/manage.py test`）：
    ```bash
    pytest -q
