@@ -4,7 +4,7 @@ httpx
 requests
 pytest
 pytest-asyncio
-httpie
+httpie>=3.2.2
 rich
 psutil
 websockets
