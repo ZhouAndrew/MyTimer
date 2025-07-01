@@ -34,7 +34,11 @@ def run_tests() -> None:
 
 
 def run_update() -> None:
-    """Update dependencies listed in requirements.txt using pip."""
+    """Update dependencies listed in requirements.txt using pip.
+
+    This does not pull new code. Use ``git pull`` or re-download the
+    repository to update the MyTimer source itself.
+    """
     subprocess.check_call([
         sys.executable,
         "-m",
