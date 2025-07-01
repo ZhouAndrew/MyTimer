@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from contextlib import asynccontextmanager
 from fastapi.responses import JSONResponse
 from fastapi import HTTPException
 from typing import List
@@ -10,13 +11,23 @@ from typing import List
 from ..core.timer_manager import TimerManager
 from .discovery import create_discovery_server
 
-app = FastAPI()
-
 manager = TimerManager()
 
 # store connected websockets
 websockets: List[WebSocket] = []
 discovery = create_discovery_server()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await discovery.start()
+    try:
+        yield
+    finally:
+        await discovery.stop()
+
+
+app = FastAPI(lifespan=lifespan)
 
 async def broadcast_state() -> None:
     """Send the current timer state to all connected WebSocket clients."""
@@ -108,11 +119,3 @@ async def websocket_endpoint(ws: WebSocket):
         websockets.remove(ws)
 
 
-@app.on_event("startup")
-async def _start_discovery() -> None:
-    await discovery.start()
-
-
-@app.on_event("shutdown")
-async def _stop_discovery() -> None:
-    await discovery.stop()
