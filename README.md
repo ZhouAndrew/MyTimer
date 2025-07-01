@@ -16,6 +16,7 @@
    或执行
    ```bash
    python tools/manage.py install
+   python tools/manage.py update
    python tools/manage.py test
    ```
 2. 启动服务器（或使用 `python tools/manage.py start`）：
