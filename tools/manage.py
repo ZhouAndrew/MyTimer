@@ -11,6 +11,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Ensure the repository root is on ``sys.path`` so imports work when executing
+# this script directly from the command line.
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
 import requests
 
 from tools import server_discovery
