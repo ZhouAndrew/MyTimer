@@ -126,6 +126,20 @@ async def tick(seconds: float):
 async def websocket_endpoint(ws: WebSocket):
     """WebSocket endpoint for real-time timer updates."""
     await ws_manager.connect(ws)
+    # send current timer state immediately after connection if any timers exist
+    if manager.timers:
+        await ws_manager.send_json(
+            ws,
+            {
+                timer_id: {
+                    "duration": timer.duration,
+                    "remaining": timer.remaining,
+                    "running": timer.running,
+                    "finished": timer.finished,
+                }
+                for timer_id, timer in manager.timers.items()
+            },
+        )
     try:
         while True:
             await ws.receive_text()
