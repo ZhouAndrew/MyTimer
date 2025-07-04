@@ -1,0 +1,56 @@
+import json
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import pytest
+import requests
+
+from mytimer.client.controller import _ring_if_needed
+
+
+@pytest.fixture(scope="module", autouse=True)
+def start_server():
+    proc = subprocess.Popen([
+        "uvicorn",
+        "mytimer.server.api:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8005",
+    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    for _ in range(10):
+        try:
+            requests.get("http://127.0.0.1:8005/timers", timeout=1)
+            break
+        except Exception:
+            time.sleep(0.5)
+    else:
+        proc.terminate()
+        proc.wait()
+        raise RuntimeError("API server failed to start")
+    yield
+    proc.terminate()
+    proc.wait()
+
+
+def test_ring_if_needed(monkeypatch, tmp_path, start_server):
+    config_dir = tmp_path / ".timercli"
+    config_dir.mkdir()
+    settings = {"notifications_enabled": True, "notify_sound": "default"}
+    (config_dir / "settings.json").write_text(json.dumps(settings))
+
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+
+    called = []
+    def fake_ring(sound):
+        called.append(sound)
+    monkeypatch.setattr("mytimer.client.controller.ring", fake_ring)
+
+    requests.post("http://127.0.0.1:8005/timers", params={"duration": 1}, timeout=5)
+    requests.post("http://127.0.0.1:8005/tick", params={"seconds": 1}, timeout=5)
+
+    _ring_if_needed("http://127.0.0.1:8005")
+    assert called == ["default"]

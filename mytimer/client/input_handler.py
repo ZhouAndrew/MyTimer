@@ -10,6 +10,7 @@ from typing import Optional
 from pathlib import Path
 
 from client_settings import ClientSettings
+from .ringer import ring
 
 HELP_TEXT = """\
 Available commands:
@@ -39,7 +40,7 @@ async def _ring_if_needed(service: "SyncService") -> None:
         resp.raise_for_status()
         for t in resp.json().values():
             if t.get("finished"):
-                print("\a", end="", flush=True)
+                ring(settings.notify_sound)
                 break
     except Exception:
         pass
