@@ -11,12 +11,14 @@ from fastapi import HTTPException
 from ..core.timer_manager import TimerManager
 from .discovery import create_discovery_server
 from .websocket_manager import WebSocketManager
+from .ticker import create_auto_ticker
 
 manager = TimerManager()
 ws_manager = WebSocketManager()
 websockets = ws_manager._websockets  # backward compatibility for tests
 
 discovery = create_discovery_server()
+auto_ticker = create_auto_ticker(manager)
 
 manager.register_on_tick(lambda tid, t: asyncio.create_task(broadcast_update(tid)))
 manager.register_on_finish(lambda tid, t: asyncio.create_task(broadcast_update(tid)))
@@ -25,9 +27,11 @@ manager.register_on_finish(lambda tid, t: asyncio.create_task(broadcast_update(t
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await discovery.start()
+    await auto_ticker.start()
     try:
         yield
     finally:
+        await auto_ticker.stop()
         await discovery.stop()
 
 
