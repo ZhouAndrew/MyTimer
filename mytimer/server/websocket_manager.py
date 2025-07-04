@@ -29,6 +29,13 @@ class WebSocketManager:
             except WebSocketDisconnect:
                 self._websockets.discard(ws)
 
+    async def send_json(self, ws: WebSocket, data: Any) -> None:
+        """Send ``data`` to a single ``ws`` connection as JSON."""
+        try:
+            await ws.send_json(data)
+        except WebSocketDisconnect:
+            self._websockets.discard(ws)
+
     async def broadcast_text(self, message: str) -> None:
         """Send a plain text ``message`` to all connected clients."""
         for ws in list(self._websockets):
@@ -36,3 +43,10 @@ class WebSocketManager:
                 await ws.send_text(message)
             except WebSocketDisconnect:
                 self._websockets.discard(ws)
+
+    async def send_text(self, ws: WebSocket, message: str) -> None:
+        """Send a plain text ``message`` to a single ``ws`` connection."""
+        try:
+            await ws.send_text(message)
+        except WebSocketDisconnect:
+            self._websockets.discard(ws)
