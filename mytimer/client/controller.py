@@ -9,6 +9,7 @@ from typing import Any
 from pathlib import Path
 
 from client_settings import ClientSettings
+from .ringer import ring
 
 import requests
 
@@ -40,7 +41,7 @@ def _ring_if_needed(base_url: str) -> None:
         resp.raise_for_status()
         for t in resp.json().values():
             if t.get("finished"):
-                print("\a", end="", flush=True)
+                ring(settings.notify_sound)
                 break
     except requests.RequestException:
         pass
