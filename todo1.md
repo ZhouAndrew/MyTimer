@@ -19,10 +19,10 @@
 
 #### 🔧 服务端任务
 
-* [ ] 创建 `WebSocketManager` 类用于管理所有客户端连接。
-* [ ] 为 `TimerManager` 添加 `on_tick`、`on_finish` 回调注册机制。
-* [ ] 每次 tick 或计时器结束时广播当前状态到客户端。
-* [ ] 消息格式建议使用：
+* [x] 创建 `WebSocketManager` 类用于管理所有客户端连接。
+* [x] 为 `TimerManager` 添加 `on_tick`、`on_finish` 回调注册机制。
+* [x] 每次 tick 或计时器结束时广播当前状态到客户端。
+* [x] 消息格式建议使用：
 
   ```json
   {
@@ -50,9 +50,9 @@ await websocket.send_json({
 
 #### 🎯 功能要求
 
-* [ ] CLI 模式中每次 `tick` 后判断计时器是否结束。
-* [ ] 如果结束，自动响铃（终端响铃或系统音效）。
-* [ ] 提供配置选项决定是否播放音效（例如 `~/.timercli/config.json`）。
+* [x] CLI 模式中每次 `tick` 后判断计时器是否结束。
+* [x] 如果结束，自动响铃（终端响铃或系统音效）。
+* [x] 提供配置选项决定是否播放音效（例如 `~/.timercli/config.json`）。
 
 #### 🔔 方案建议
 
@@ -74,9 +74,9 @@ await websocket.send_json({
 
 #### 🕒 功能说明
 
-* [ ] 服务端可启动自动 tick 计时器（每秒递减）。
-* [ ] 或 CLI 客户端支持后台自动 tick。
-* [ ] 可设定 tick 周期（默认每秒）与启停控制。
+* [x] 服务端可启动自动 tick 计时器（每秒递减）。
+* [x] 或 CLI 客户端支持后台自动 tick。
+* [x] 可设定 tick 周期（默认每秒）与启停控制。
 
 ---
 
