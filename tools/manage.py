@@ -52,6 +52,18 @@ def run_update() -> None:
     ])
 
 
+def run_self_update(branch: str = "main") -> None:
+    """Pull the latest MyTimer source from GitHub."""
+    if not (ROOT / ".git").exists():
+        print("Repository not cloned with git; cannot self update")
+        return
+    try:
+        subprocess.check_call(["git", "pull", "origin", branch], cwd=ROOT)
+        print("Repository updated")
+    except subprocess.CalledProcessError as exc:
+        print(f"Update failed: {exc}")
+
+
 def start_server(port: int) -> None:
     """Start the API server with uvicorn and save the PID."""
     if PID_FILE.exists():
@@ -166,6 +178,8 @@ def main() -> None:
 
     sub.add_parser("update", help="Update project dependencies")
 
+    sub.add_parser("selfupdate", help="Update MyTimer from GitHub")
+
     start_p = sub.add_parser("start", help="Start the API server")
     start_p.add_argument("--port", type=int, default=8000, help="Server port")
 
@@ -193,6 +207,8 @@ def main() -> None:
         run_install()
     elif args.command == "update":
         run_update()
+    elif args.command == "selfupdate":
+        run_self_update()
     elif args.command == "start":
         start_server(args.port)
     elif args.command == "stop":

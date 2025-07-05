@@ -1,12 +1,17 @@
-# Task Overview
+# 管理脚本自更新功能
 
-## Completed
-- Cleaned up unused imports in `mytimer/server/api.py` and tests.
-- Installed required dependencies.
-- Verified that all unit tests pass with `pytest -q`.
-- Implemented `Notifier` for timer completion alerts.
-- Added CLI modules (`tui_app.py`, `client_view_layer.py`, `input_handler.py`).
-- Implemented `ClientSettings` module with configuration persistence.
+本阶段目标是在 `tools/manage.py` 新增從 GitHub 同步程式碼的指令。
 
-## Pending
-- Expand integration tests for full client/server workflow.
+## 子任務
+1. **實作 `run_self_update` 函式**
+   - 檢查當前目錄是否為 git 倉庫。
+   - 執行 `git pull origin main` 更新程式碼。
+   - 捕獲執行失敗時輸出提示訊息。
+2. **更新命令解析**
+   - 新增 `selfupdate` 子命令並連結到上述函式。
+   - 確保 `--help` 中能看到說明。
+3. **測試要求**
+   - 編寫單元測試模擬 `git` 呼叫，驗證函式被正確觸發。
+   - 在缺少 git 或非倉庫環境時應返回友好提示。
+
+完成後執行 `pytest -q` 確認所有測試通過。
