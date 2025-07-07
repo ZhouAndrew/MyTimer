@@ -117,6 +117,23 @@ class TimerManager:
         """Remove a timer from the registry."""
         self.timers.pop(timer_id, None)
 
+    def pause_all(self) -> None:
+        """Pause all running timers."""
+        for timer in self.timers.values():
+            if not timer.finished:
+                timer.running = False
+
+    def reset_all(self) -> None:
+        """Reset all timers to their initial duration and resume them."""
+        for timer in self.timers.values():
+            timer.remaining = timer.duration
+            timer.running = True
+            timer.finished = False
+
+    def running_count(self) -> int:
+        """Return the number of running timers."""
+        return sum(1 for t in self.timers.values() if t.running and not t.finished)
+
     def _run_callbacks(self, cbs: List[Callable[[int, Timer], Awaitable[None] | None]], tid: int, timer: Timer) -> None:
         """Invoke callbacks with ``tid`` and ``timer`` safely."""
         for cb in cbs:
