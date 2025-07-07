@@ -15,7 +15,6 @@ class ClientSettings:
     server_url: str = "http://127.0.0.1:8000"
     notifications_enabled: bool = True
     notify_sound: str = "default"
-    theme: str = "light"
 
     @classmethod
     def load(cls, path: str | Path) -> "ClientSettings":
@@ -35,7 +34,6 @@ class ClientSettings:
                 "notifications_enabled", cls.notifications_enabled
             ),
             notify_sound=data.get("notify_sound", cls.notify_sound),
-            theme=data.get("theme", cls.theme),
         )
 
     def save(self, path: str | Path) -> None:
@@ -46,6 +44,6 @@ class ClientSettings:
 
     def update(self, **kwargs: Any) -> None:
         """Update attributes with provided keyword arguments."""
-        for field in ("server_url", "notifications_enabled", "notify_sound", "theme"):
+        for field in ("server_url", "notifications_enabled", "notify_sound"):
             if field in kwargs:
                 setattr(self, field, kwargs[field])

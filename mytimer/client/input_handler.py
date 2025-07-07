@@ -40,7 +40,7 @@ async def _ring_if_needed(service: "SyncService") -> None:
         resp.raise_for_status()
         for t in resp.json().values():
             if t.get("finished"):
-                ring(settings.notify_sound)
+                ring(settings.notify_sound, settings.volume, settings.mute)
                 break
     except Exception:
         pass

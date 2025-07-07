@@ -38,19 +38,29 @@ def start_server():
 def test_ring_if_needed(monkeypatch, tmp_path, start_server):
     config_dir = tmp_path / ".timercli"
     config_dir.mkdir()
-    settings = {"notifications_enabled": True, "notify_sound": "default"}
+    settings = {
+        "notifications_enabled": True,
+        "notify_sound": "default",
+        "volume": 0.8,
+        "mute": False,
+    }
     (config_dir / "settings.json").write_text(json.dumps(settings))
 
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+    monkeypatch.setattr(
+        __import__("mytimer.client.controller", fromlist=["SETTINGS_PATH"]),
+        "SETTINGS_PATH",
+        config_dir / "settings.json",
+    )
 
     called = []
-    def fake_ring(sound):
-        called.append(sound)
+    def fake_ring(sound, volume, mute):
+        called.append((sound, volume, mute))
     monkeypatch.setattr("mytimer.client.controller.ring", fake_ring)
 
     requests.post("http://127.0.0.1:8005/timers", params={"duration": 1}, timeout=5)
     requests.post("http://127.0.0.1:8005/tick", params={"seconds": 1}, timeout=5)
 
     _ring_if_needed("http://127.0.0.1:8005")
-    assert called == ["default"]
+    assert called == [("default", 0.8, False)]
