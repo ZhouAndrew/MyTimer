@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
+import sys
 from typing import List
 
-from rich.console import Console
+from rich.console import Console, Group
 from rich.live import Live
 from rich.table import Table
 from rich.panel import Panel
+from rich.text import Text
 
 from .sync_service import SyncService, TimerState
 
@@ -19,7 +22,8 @@ class ClientViewLayer:
 
     def __init__(self, service: SyncService) -> None:
         self.service = service
-
+        self.selected_idx = 0
+        
     def _build_table(self) -> Table:
         table = Table(title="Timer Dashboard")
         table.add_column("ID", justify="right")
@@ -27,18 +31,20 @@ class ClientViewLayer:
         table.add_column("Duration", justify="right")
         table.add_column("Remaining", justify="right")
         table.add_column("Status")
-
-        for tid, timer in sorted(self.service.state.items(), key=lambda t: int(t[0])):
+        sorted_timers = sorted(self.service.state.items(), key=lambda t: int(t[0]))
+        for index, (tid, timer) in enumerate(sorted_timers):
             if timer.finished:
                 status = "finished"
             else:
                 status = "running" if timer.running else "paused"
+            style = "reverse" if index == self.selected_idx else ""
             table.add_row(
                 str(tid),
                 f"Timer {tid}",
                 f"{timer.duration}",
                 f"{timer.remaining}",
                 status,
+                style=style,
             )
         return table
 
@@ -52,7 +58,20 @@ class ClientViewLayer:
         )
         finished = sum(1 for t in self.service.state.values() if t.finished)
         title = f"Running: {running}  Paused: {paused}  Finished: {finished}"
-        return Panel(self._build_table(), title=title, border_style="blue")
+        header = Text(
+            f"Server: {self.service.base_url} "
+            f"({'connected' if self.service.connected else 'disconnected'})",
+            style="cyan",
+        )
+        hints = Text(
+            "j/down: next  k/up: prev  p: pause  r: resume  d: delete  q: quit",
+            style="green",
+        )
+        return Panel(
+            Group(header, self._build_table(), hints),
+            title=title,
+            border_style="blue",
+        )
 
     async def _fetch_initial_state(self) -> None:
         resp = await self.service.client.get("/timers")
@@ -72,18 +91,61 @@ class ClientViewLayer:
         return output
 
     async def run_live(self) -> None:
-        """Continuously display timer updates until interrupted."""
+        """Continuously display timer updates and handle keyboard commands."""
         await self.service.connect()
         await self._fetch_initial_state()
         console = Console()
+        running = True
+
+        async def input_loop() -> None:
+            nonlocal running
+            loop = asyncio.get_running_loop()
+            while running:
+                line = await loop.run_in_executor(None, sys.stdin.readline)
+                cmd = line.strip().lower()
+                if not cmd:
+                    continue
+                if cmd in {"q", "quit"}:
+                    running = False
+                    break
+                if cmd in {"j", "down"}:
+                    if self.service.state:
+                        self.selected_idx = (self.selected_idx + 1) % len(self.service.state)
+                elif cmd in {"k", "up"}:
+                    if self.service.state:
+                        self.selected_idx = (self.selected_idx - 1) % len(self.service.state)
+                elif cmd == "p":
+                    tid = self._current_id()
+                    if tid is not None:
+                        await self.service.pause_timer(int(tid))
+                elif cmd == "r":
+                    tid = self._current_id()
+                    if tid is not None:
+                        await self.service.resume_timer(int(tid))
+                elif cmd == "d":
+                    tid = self._current_id()
+                    if tid is not None:
+                        await self.service.remove_timer(int(tid))
+
         with Live(self._build_panel(), console=console, refresh_per_second=2) as live:
+            task = asyncio.create_task(input_loop())
             try:
-                while True:
+                while running:
                     live.update(self._build_panel())
                     await asyncio.sleep(0.5)
             except KeyboardInterrupt:
-                pass
+                running = False
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
         await self.service.close()
+
+    def _current_id(self) -> str | None:
+        if not self.service.state:
+            return None
+        timers = sorted(self.service.state.keys(), key=lambda x: int(x))
+        self.selected_idx = max(0, min(self.selected_idx, len(timers) - 1))
+        return timers[self.selected_idx]
 
 
 def main(args: List[str] | None = None) -> None:
