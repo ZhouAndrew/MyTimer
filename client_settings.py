@@ -15,8 +15,6 @@ class ClientSettings:
     server_url: str = "http://127.0.0.1:8000"
     notifications_enabled: bool = True
     notify_sound: str = "default"
-    volume: float = 1.0
-    mute: bool = False
 
     @classmethod
     def load(cls, path: str | Path) -> "ClientSettings":
@@ -36,8 +34,6 @@ class ClientSettings:
                 "notifications_enabled", cls.notifications_enabled
             ),
             notify_sound=data.get("notify_sound", cls.notify_sound),
-            volume=float(data.get("volume", cls.volume)),
-            mute=bool(data.get("mute", cls.mute)),
         )
 
     def save(self, path: str | Path) -> None:
@@ -48,6 +44,6 @@ class ClientSettings:
 
     def update(self, **kwargs: Any) -> None:
         """Update attributes with provided keyword arguments."""
-        for field in ("server_url", "notifications_enabled", "notify_sound", "volume", "mute"):
+        for field in ("server_url", "notifications_enabled", "notify_sound"):
             if field in kwargs:
                 setattr(self, field, kwargs[field])

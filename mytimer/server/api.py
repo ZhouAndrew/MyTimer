@@ -117,6 +117,20 @@ async def remove_timer(timer_id: int):
     await broadcast_state()
     return JSONResponse(status_code=200, content={"status": "removed"})
 
+@app.post("/timers/pause_all")
+async def pause_all_timers():
+    """Pause all running timers."""
+    manager.pause_all()
+    await broadcast_state()
+    return {"status": "all_paused"}
+
+@app.post("/timers/reset_all")
+async def reset_all_timers():
+    """Reset all timers to their initial durations."""
+    manager.reset_all()
+    await broadcast_state()
+    return {"status": "all_reset"}
+
 @app.post("/tick")
 async def tick(seconds: float):
     """Advance all timers by ``seconds``."""
@@ -125,6 +139,14 @@ async def tick(seconds: float):
     manager.tick(seconds)
     await broadcast_state()
     return {"status": "ticked"}
+
+@app.get("/status")
+async def server_status():
+    """Return basic server status information."""
+    return {
+        "timers": len(manager.timers),
+        "running": manager.running_count(),
+    }
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):

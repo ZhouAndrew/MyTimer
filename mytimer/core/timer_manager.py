@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Callable, Awaitable, List
 import asyncio
+import contextlib
+import json
+from pathlib import Path
 
 
 @dataclass
@@ -49,6 +52,9 @@ class TimerManager:
         self._next_id = 1
         self._tick_callbacks: List[Callable[[int, Timer], Awaitable[None] | None]] = []
         self._finish_callbacks: List[Callable[[int, Timer], Awaitable[None] | None]] = []
+        self._auto_task: asyncio.Task[None] | None = None
+        self._auto_interval = 1.0
+        self._auto_running = False
 
     def register_on_tick(self, callback: Callable[[int, Timer], Awaitable[None] | None]) -> None:
         """Register a callback triggered after each timer ``tick``."""
@@ -111,6 +117,23 @@ class TimerManager:
         """Remove a timer from the registry."""
         self.timers.pop(timer_id, None)
 
+    def pause_all(self) -> None:
+        """Pause all running timers."""
+        for timer in self.timers.values():
+            if not timer.finished:
+                timer.running = False
+
+    def reset_all(self) -> None:
+        """Reset all timers to their initial duration and resume them."""
+        for timer in self.timers.values():
+            timer.remaining = timer.duration
+            timer.running = True
+            timer.finished = False
+
+    def running_count(self) -> int:
+        """Return the number of running timers."""
+        return sum(1 for t in self.timers.values() if t.running and not t.finished)
+
     def _run_callbacks(self, cbs: List[Callable[[int, Timer], Awaitable[None] | None]], tid: int, timer: Timer) -> None:
         """Invoke callbacks with ``tid`` and ``timer`` safely."""
         for cb in cbs:
@@ -122,3 +145,98 @@ class TimerManager:
                     asyncio.run(cb(tid, timer))
             else:
                 cb(tid, timer)
+
+    def reset_timer(self, timer_id: int) -> None:
+        """Reset a timer back to its original duration and running state."""
+        timer = self.timers.get(timer_id)
+        if timer:
+            timer.remaining = timer.duration
+            timer.running = True
+            timer.finished = False
+
+    def pause_all(self) -> None:
+        """Pause all running timers."""
+        for timer in self.timers.values():
+            if not timer.finished:
+                timer.running = False
+
+    def resume_all(self) -> None:
+        """Resume all non-finished timers."""
+        for timer in self.timers.values():
+            if not timer.finished:
+                timer.running = True
+
+    def remove_all(self) -> None:
+        """Remove all timers from the manager."""
+        self.timers.clear()
+
+    def reset_all(self) -> None:
+        """Reset every timer to its initial state."""
+        for tid in list(self.timers.keys()):
+            self.reset_timer(tid)
+
+    def save_state(self, path: str | Path) -> None:
+        """Persist current timers to a JSON file."""
+        file_path = Path(path)
+        data = {
+            "next_id": self._next_id,
+            "timers": {
+                str(tid): {
+                    "duration": t.duration,
+                    "remaining": t.remaining,
+                    "running": t.running,
+                    "finished": t.finished,
+                }
+                for tid, t in self.timers.items()
+            },
+        }
+        with file_path.open("w", encoding="utf-8") as f:
+            json.dump(data, f)
+
+    def load_state(self, path: str | Path) -> None:
+        """Load timers from a JSON file if it exists."""
+        file_path = Path(path)
+        if not file_path.exists():
+            return
+        try:
+            with file_path.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return
+
+        self.timers.clear()
+        timers_data = data.get("timers", {})
+        for tid_str, tdata in timers_data.items():
+            tid = int(tid_str)
+            timer = Timer(
+                duration=tdata.get("duration", 0),
+                remaining=tdata.get("remaining", 0),
+                running=tdata.get("running", True),
+                finished=tdata.get("finished", False),
+            )
+            self.timers[tid] = timer
+        self._next_id = data.get("next_id", max(self.timers.keys(), default=0) + 1)
+
+    async def _auto_loop(self) -> None:
+        while self._auto_running:
+            self.tick(self._auto_interval)
+            await asyncio.sleep(self._auto_interval)
+
+    async def start_auto_tick(self, interval: float = 1.0) -> None:
+        """Start background ticking at ``interval`` seconds."""
+        if self._auto_task:
+            return
+        if interval <= 0:
+            return
+        self._auto_interval = interval
+        self._auto_running = True
+        self._auto_task = asyncio.create_task(self._auto_loop())
+
+    async def stop_auto_tick(self) -> None:
+        """Stop the background ticking task."""
+        self._auto_running = False
+        if self._auto_task:
+            self._auto_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._auto_task
+        self._auto_task = None
