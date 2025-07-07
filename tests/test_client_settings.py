@@ -13,28 +13,34 @@ def test_load_defaults_when_file_missing(tmp_path):
     assert settings.server_url == "http://127.0.0.1:8000"
     assert settings.notifications_enabled is True
     assert settings.notify_sound == "default"
+    assert settings.theme == "light"
 
 
 def test_save_and_load(tmp_path):
     path = tmp_path / "settings.json"
     original = ClientSettings(
-        server_url="http://example.com", notifications_enabled=False, notify_sound="ding"
+        server_url="http://example.com",
+        notifications_enabled=False,
+        notify_sound="ding",
+        theme="dark",
     )
     original.save(path)
     loaded = ClientSettings.load(path)
     assert loaded.server_url == "http://example.com"
     assert loaded.notifications_enabled is False
     assert loaded.notify_sound == "ding"
+    assert loaded.theme == "dark"
 
 
 def test_update_and_persistence(tmp_path):
     path = tmp_path / "settings.json"
     settings = ClientSettings()
-    settings.update(server_url="http://server", notify_sound="bell")
+    settings.update(server_url="http://server", notify_sound="bell", theme="blue")
     settings.save(path)
     loaded = ClientSettings.load(path)
     assert loaded.server_url == "http://server"
     assert loaded.notify_sound == "bell"
+    assert loaded.theme == "blue"
     assert loaded.notifications_enabled is True
 
 
@@ -45,3 +51,4 @@ def test_partial_file_uses_defaults(tmp_path):
     assert settings.server_url == "http://foo"
     assert settings.notifications_enabled is True
     assert settings.notify_sound == "default"
+    assert settings.theme == "light"
