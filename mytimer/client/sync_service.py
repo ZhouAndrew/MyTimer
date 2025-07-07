@@ -37,10 +37,12 @@ class SyncService:
         self.state: Dict[str, TimerState] = {}
         self._ws: Optional[websockets.WebSocketClientProtocol] = None
         self._recv_task: Optional[asyncio.Task[None]] = None
+        self.connected = False
 
     async def connect(self) -> None:
         """Establish the WebSocket connection and start the receive loop."""
         self._ws = await websockets.connect(self.ws_url)
+        self.connected = True
         self._recv_task = asyncio.create_task(self._recv_loop())
 
     async def _recv_loop(self) -> None:
@@ -75,6 +77,7 @@ class SyncService:
         """Close WebSocket connection and HTTP client."""
         if self._ws is not None:
             await self._ws.close()
+            self.connected = False
         if self._recv_task is not None:
             self._recv_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
