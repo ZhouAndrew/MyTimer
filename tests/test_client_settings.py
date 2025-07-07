@@ -26,7 +26,7 @@ def test_save_and_load(tmp_path):
         notifications_enabled=False,
        
         notify_sound="ding",
-        theme="dark",,
+        theme="dark",
         volume=0.5,
         mute=True,
     )
