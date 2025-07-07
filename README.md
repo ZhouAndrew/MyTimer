@@ -27,7 +27,7 @@ The document may contain inconsistencies, as it is derived from this plan.
    python tools/manage.py install
    python tools/manage.py test
    ```
-3. 跟新
+3. 更新
    ```bash
    python tools/manage.py update
    python tools/manage.py test
