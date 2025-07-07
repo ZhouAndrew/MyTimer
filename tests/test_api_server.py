@@ -77,3 +77,34 @@ def test_tick_negative_seconds():
     resp = client.post('/tick', params={'seconds': -1})
     assert resp.status_code == 400
     assert resp.json()['detail'] == 'seconds must be non-negative'
+
+
+def test_pause_all_and_reset_all():
+    client.post('/timers', params={'duration': 5})
+    client.post('/timers', params={'duration': 3})
+    resp = client.post('/timers/pause_all')
+    assert resp.status_code == 200
+    data = client.get('/timers').json()
+    assert all(not t['running'] for t in data.values())
+    client.post('/tick', params={'seconds': 2})
+    data_after_tick = client.get('/timers').json()
+    for tid, t in data.items():
+        assert data_after_tick[tid]['remaining'] == t['remaining']
+
+    resp = client.post('/timers/reset_all')
+    assert resp.status_code == 200
+    reset = client.get('/timers').json()
+    for t in reset.values():
+        assert t['remaining'] == t['duration']
+        assert t['running'] and not t['finished']
+
+
+def test_server_status():
+    client.post('/timers', params={'duration': 5})
+    client.post('/timers', params={'duration': 4})
+    status = client.get('/status').json()
+    assert status['timers'] == 2
+    assert status['running'] == 2
+    client.post('/timers/pause_all')
+    status_after = client.get('/status').json()
+    assert status_after['running'] == 0
