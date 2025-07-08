@@ -45,6 +45,9 @@ class CLISettings:
                 f"6. Mute: {self.settings.mute}\n"
                 "7. Discover servers\n"
                 "8. Save and exit\n"
+                f"5. Auth Token: {self.settings.auth_token}\n"
+                f"6. Device Name: {self.settings.device_name}\n"
+                "7. Save and exit\n"
                 "q. Quit\n"
                 "Choice: ",
                 end="",
@@ -93,6 +96,14 @@ class CLISettings:
                         ip, port = servers[int(sel) - 1]
                         self.settings.server_url = f"http://{ip}:{port}"
             elif choice == "8":
+                value = self._prompt("Auth Token: ", it)
+                if value:
+                    self.settings.auth_token = value
+            elif choice == "6":
+                value = self._prompt("Device Name: ", it)
+                if value:
+                    self.settings.device_name = value
+            elif choice == "7":
                 self.save()
                 print("Saved.")
                 break
@@ -113,6 +124,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--volume", type=float, help="Notification volume 0-1")
     parser.add_argument("--mute", action="store_true", help="Mute notifications")
     parser.add_argument("--unmute", action="store_true", help="Unmute notifications")
+    parser.add_argument("--auth-token", help="Authentication token")
+    parser.add_argument("--device-name", help="Device name")
     parser.add_argument("--print", action="store_true", help="Print current settings")
     args = parser.parse_args(argv)
 
@@ -142,6 +155,11 @@ def main(argv: list[str] | None = None) -> None:
         changed = True
     if args.unmute:
         cli.settings.mute = False
+    if args.auth_token:
+        cli.settings.auth_token = args.auth_token
+        changed = True
+    if args.device_name:
+        cli.settings.device_name = args.device_name
         changed = True
 
     if args.print and not changed:

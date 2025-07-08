@@ -54,6 +54,9 @@ def test_update_and_persistence(tmp_path):
         notify_sound="bell",
         auth_token="xyz",
         device_name="dev2",
+        theme="blue",
+        volume=0.7,
+        mute=True,
     )
     settings.save(path)
     loaded = ClientSettings.load(path)
