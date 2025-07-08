@@ -39,7 +39,9 @@ class CLISettings:
                 f"2. Theme: {self.settings.theme}\n"
                 f"3. Notifications Enabled: {self.settings.notifications_enabled}\n"
                 f"4. Notify Sound: {self.settings.notify_sound}\n"
-                "5. Save and exit\n"
+                f"5. Auth Token: {self.settings.auth_token}\n"
+                f"6. Device Name: {self.settings.device_name}\n"
+                "7. Save and exit\n"
                 "q. Quit\n"
                 "Choice: ",
                 end="",
@@ -64,6 +66,14 @@ class CLISettings:
                 if value:
                     self.settings.notify_sound = value
             elif choice == "5":
+                value = self._prompt("Auth Token: ", it)
+                if value:
+                    self.settings.auth_token = value
+            elif choice == "6":
+                value = self._prompt("Device Name: ", it)
+                if value:
+                    self.settings.device_name = value
+            elif choice == "7":
                 self.save()
                 print("Saved.")
                 break
@@ -81,6 +91,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--enable-notify", action="store_true", help="Enable notifications")
     parser.add_argument("--disable-notify", action="store_true", help="Disable notifications")
     parser.add_argument("--notify-sound", help="Notification sound")
+    parser.add_argument("--auth-token", help="Authentication token")
+    parser.add_argument("--device-name", help="Device name")
     parser.add_argument("--print", action="store_true", help="Print current settings")
     args = parser.parse_args(argv)
 
@@ -101,6 +113,12 @@ def main(argv: list[str] | None = None) -> None:
         changed = True
     if args.notify_sound:
         cli.settings.notify_sound = args.notify_sound
+        changed = True
+    if args.auth_token:
+        cli.settings.auth_token = args.auth_token
+        changed = True
+    if args.device_name:
+        cli.settings.device_name = args.device_name
         changed = True
 
     if args.print and not changed:

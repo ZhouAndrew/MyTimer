@@ -9,11 +9,16 @@ from fastapi.responses import JSONResponse
 from fastapi import HTTPException
 
 from ..core.timer_manager import TimerManager
+import os
+from pathlib import Path
 from .discovery import create_discovery_server
 from .websocket_manager import WebSocketManager
 from .ticker import create_auto_ticker
 
+STATE_FILE = os.environ.get("MYTIMER_STATE_FILE")
 manager = TimerManager()
+if STATE_FILE:
+    manager.load_state(Path(STATE_FILE))
 ws_manager = WebSocketManager()
 websockets = ws_manager._websockets  # backward compatibility for tests
 
@@ -31,11 +36,14 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        if STATE_FILE:
+            manager.save_state(Path(STATE_FILE))
         await auto_ticker.stop()
         await discovery.stop()
 
 
 app = FastAPI(lifespan=lifespan)
+
 
 async def broadcast_state() -> None:
     """Send the current timer state to all connected WebSocket clients."""
@@ -50,6 +58,7 @@ async def broadcast_state() -> None:
         for timer_id, timer in manager.timers.items()
     }
     await ws_manager.broadcast_json(data)
+
 
 async def broadcast_update(timer_id: int) -> None:
     timer = manager.timers.get(timer_id)
@@ -66,6 +75,7 @@ async def broadcast_update(timer_id: int) -> None:
         }
     )
 
+
 @app.post("/timers")
 async def create_timer(duration: float):
     """Create a new timer with the given duration in seconds."""
@@ -76,6 +86,7 @@ async def create_timer(duration: float):
     timer_id = manager.create_timer(duration)
     await broadcast_state()
     return {"timer_id": timer_id}
+
 
 @app.get("/timers")
 async def list_timers():
@@ -90,6 +101,7 @@ async def list_timers():
         for timer_id, timer in manager.timers.items()
     }
 
+
 @app.post("/timers/{timer_id}/pause")
 async def pause_timer(timer_id: int):
     """Pause a running timer."""
@@ -98,6 +110,7 @@ async def pause_timer(timer_id: int):
     manager.pause_timer(timer_id)
     await broadcast_state()
     return JSONResponse(status_code=200, content={"status": "paused"})
+
 
 @app.post("/timers/{timer_id}/resume")
 async def resume_timer(timer_id: int):
@@ -108,6 +121,7 @@ async def resume_timer(timer_id: int):
     await broadcast_state()
     return JSONResponse(status_code=200, content={"status": "resumed"})
 
+
 @app.delete("/timers/{timer_id}")
 async def remove_timer(timer_id: int):
     """Remove a timer from the manager."""
@@ -117,6 +131,7 @@ async def remove_timer(timer_id: int):
     await broadcast_state()
     return JSONResponse(status_code=200, content={"status": "removed"})
 
+
 @app.post("/timers/pause_all")
 async def pause_all_timers():
     """Pause all running timers."""
@@ -124,12 +139,14 @@ async def pause_all_timers():
     await broadcast_state()
     return {"status": "all_paused"}
 
+
 @app.post("/timers/reset_all")
 async def reset_all_timers():
     """Reset all timers to their initial durations."""
     manager.reset_all()
     await broadcast_state()
     return {"status": "all_reset"}
+
 
 @app.post("/tick")
 async def tick(seconds: float):
@@ -140,6 +157,7 @@ async def tick(seconds: float):
     await broadcast_state()
     return {"status": "ticked"}
 
+
 @app.get("/status")
 async def server_status():
     """Return basic server status information."""
@@ -147,6 +165,7 @@ async def server_status():
         "timers": len(manager.timers),
         "running": manager.running_count(),
     }
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
@@ -173,5 +192,3 @@ async def websocket_endpoint(ws: WebSocket):
         pass
     finally:
         ws_manager.disconnect(ws)
-
-

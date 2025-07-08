@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import difflib
+import re
 import asyncio
 import os
 import signal
@@ -24,10 +26,38 @@ from tools import server_discovery
 PID_FILE = Path("server.pid")
 LOG_FILE = Path("server.log")
 
+COMMANDS = [
+    "install",
+    "update",
+    "selfupdate",
+    "start",
+    "stop",
+    "log",
+    "test",
+    "autotick",
+    "cli",
+    "tui",
+]
+
+
+class SuggestParser(argparse.ArgumentParser):
+    """ArgumentParser that suggests the closest command on errors."""
+
+    def error(self, message: str) -> None:  # type: ignore[override]
+        match = re.search(r"invalid choice: '([^']+)'", message)
+        if match:
+            cmd = match.group(1)
+            suggestion = difflib.get_close_matches(cmd, COMMANDS, n=1)
+            if suggestion:
+                message += f"\nDid you mean '{suggestion[0]}'?"
+        super().error(message)
+
 
 def run_install() -> None:
     """Install dependencies listed in requirements.txt using pip."""
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
+    )
 
 
 def run_tests() -> None:
@@ -41,15 +71,17 @@ def run_update() -> None:
     This does not pull new code. Use ``git pull`` or re-download the
     repository to update the MyTimer source itself.
     """
-    subprocess.check_call([
-        sys.executable,
-        "-m",
-        "pip",
-        "install",
-        "-U",
-        "-r",
-        "requirements.txt",
-    ])
+    subprocess.check_call(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-U",
+            "-r",
+            "requirements.txt",
+        ]
+    )
 
 
 def run_self_update(branch: str = "main") -> None:
@@ -138,7 +170,16 @@ def run_controller(url: str, controller_args: list[str]) -> None:
     server = ensure_server(url)
     if not server:
         return
-    subprocess.call([sys.executable, "-m", "mytimer.client.controller", "--url", server, *controller_args])
+    subprocess.call(
+        [
+            sys.executable,
+            "-m",
+            "mytimer.client.controller",
+            "--url",
+            server,
+            *controller_args,
+        ]
+    )
 
 
 def run_tui(url: str, once: bool) -> None:
@@ -171,7 +212,7 @@ def run_auto_tick(url: str, interval: float) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="MyTimer management tool")
+    parser = SuggestParser(description="MyTimer management tool")
     sub = parser.add_subparsers(dest="command")
 
     sub.add_parser("install", help="Install project dependencies")
@@ -190,16 +231,26 @@ def main() -> None:
     sub.add_parser("test", help="Run all unit tests")
 
     auto_p = sub.add_parser("autotick", help="Automatically tick the server")
-    auto_p.add_argument("--url", default="http://127.0.0.1:8000", help="Server base URL")
-    auto_p.add_argument("--interval", type=float, default=1.0, help="Tick interval in seconds")
+    auto_p.add_argument(
+        "--url", default="http://127.0.0.1:8000", help="Server base URL"
+    )
+    auto_p.add_argument(
+        "--interval", type=float, default=1.0, help="Tick interval in seconds"
+    )
 
     cli_p = sub.add_parser("cli", help="Run the CLI client")
-    cli_p.add_argument("client_args", nargs=argparse.REMAINDER, help="Arguments for the client controller")
+    cli_p.add_argument(
+        "client_args",
+        nargs=argparse.REMAINDER,
+        help="Arguments for the client controller",
+    )
     cli_p.add_argument("--url", default="http://127.0.0.1:8000", help="Server base URL")
 
     tui_p = sub.add_parser("tui", help="Run the TUI client")
     tui_p.add_argument("--url", default="http://127.0.0.1:8000", help="Server base URL")
-    tui_p.add_argument("--once", action="store_true", help="Render one snapshot and exit")
+    tui_p.add_argument(
+        "--once", action="store_true", help="Render one snapshot and exit"
+    )
 
     args = parser.parse_args()
 
