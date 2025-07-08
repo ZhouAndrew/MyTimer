@@ -22,7 +22,6 @@ class ClientSettings:
     volume: float = 1.0
     mute: bool = False
 
-
     @classmethod
     def load(cls, path: str | Path) -> "ClientSettings":
         """Load settings from ``path``. Missing or invalid files return defaults."""
@@ -41,14 +40,11 @@ class ClientSettings:
                 "notifications_enabled", cls.notifications_enabled
             ),
             notify_sound=data.get("notify_sound", cls.notify_sound),
-
             auth_token=data.get("auth_token"),
             device_name=data.get("device_name"),
-
             theme=data.get("theme", cls.theme),
             volume=float(data.get("volume", cls.volume)),
             mute=bool(data.get("mute", cls.mute)),
-
         )
 
     def save(self, path: str | Path) -> None:
@@ -59,18 +55,16 @@ class ClientSettings:
 
     def update(self, **kwargs: Any) -> None:
         """Update attributes with provided keyword arguments."""
-        for field in (
-            "server_url",
-            "notifications_enabled",
-            "notify_sound",
-            "auth_token",
-            "device_name",
-            "theme",
-            "volume",
-            "mute",
-        ):
-            if field in kwargs:
-                setattr(self, field, kwargs[field])
+        self.server_url = kwargs.get("server_url", self.server_url)
+        self.notifications_enabled = kwargs.get(
+            "notifications_enabled", self.notifications_enabled
+        )
+        self.notify_sound = kwargs.get("notify_sound", self.notify_sound)
+        self.auth_token = kwargs.get("auth_token", self.auth_token)
+        self.device_name = kwargs.get("device_name", self.device_name)
+        self.theme = kwargs.get("theme", "blue")
+        self.volume = kwargs.get("volume", 0.7)
+        self.mute = kwargs.get("mute", True)
 
     def export_json(self, path: str | Path) -> None:
         """Export settings to ``path`` as JSON."""
@@ -80,4 +74,3 @@ class ClientSettings:
     def import_json(cls, path: str | Path) -> "ClientSettings":
         """Load settings from ``path`` using :meth:`load`."""
         return cls.load(path)
-
