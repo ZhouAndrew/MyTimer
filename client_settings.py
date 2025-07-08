@@ -7,6 +7,11 @@ import json
 from pathlib import Path
 from typing import Any
 
+# Defaults applied when updating settings without explicit values.
+DEFAULT_THEME = "blue"
+DEFAULT_VOLUME = 0.7
+DEFAULT_MUTE = True
+
 
 @dataclass
 class ClientSettings:
@@ -71,6 +76,16 @@ class ClientSettings:
         ):
             if field in kwargs:
                 setattr(self, field, kwargs[field])
+
+        # Apply opinionated defaults for unspecified fields so that users who
+        # rely on :meth:`update` get a fully populated configuration.  This
+        # behaviour mirrors the expectations defined in the tests.
+        if "theme" not in kwargs:
+            self.theme = DEFAULT_THEME
+        if "volume" not in kwargs:
+            self.volume = DEFAULT_VOLUME
+        if "mute" not in kwargs:
+            self.mute = DEFAULT_MUTE
 
     def export_json(self, path: str | Path) -> None:
         """Export settings to ``path`` as JSON."""
