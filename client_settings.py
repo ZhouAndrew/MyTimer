@@ -59,6 +59,21 @@ class ClientSettings:
             json.dump(asdict(self), f)
 
     def update(self, **kwargs: Any) -> None:
+        """Update attributes with provided keyword arguments."""
+        defaults = {"theme": "blue", "volume": 0.7, "mute": True}
+        for field in (
+            "server_url",
+            "notifications_enabled",
+            "notify_sound",
+            "auth_token",
+            "device_name",
+            "theme",
+            "volume",
+            "mute",
+        ):
+            if field in kwargs:
+                setattr(self, field, kwargs[field])
+            elif field in defaults and field not in kwargs:
         """Update attributes with provided keyword arguments.
 
         If ``theme``, ``volume`` or ``mute`` are not supplied they default to
@@ -75,7 +90,7 @@ class ClientSettings:
         )
         self.notify_sound = kwargs.get("notify_sound", self.notify_sound)
         self.auth_token = kwargs.get("auth_token", self.auth_token)
-        self.device_name = kwargs.get("device_name", self.device_name)
+        self.device_name = kwargs.get("device_name",tests/test_cli_settings_module.py self.device_name)
         self.theme = kwargs.get("theme", "blue")
         self.volume = kwargs.get("volume", 0.7)
         self.mute = kwargs.get("mute", True)
