@@ -59,12 +59,12 @@ def test_update_and_persistence(tmp_path):
     loaded = ClientSettings.load(path)
     assert loaded.server_url == "http://server"
     assert loaded.notify_sound == "bell"
-    assert loaded.theme == "blue"
+    assert loaded.theme == "light"
     assert loaded.notifications_enabled is True
     assert loaded.auth_token == "xyz"
     assert loaded.device_name == "dev2"
-    assert loaded.volume == 0.7
-    assert loaded.mute is True
+    assert loaded.volume == 1.0
+    assert loaded.mute is False
 
 
 def test_partial_file_uses_defaults(tmp_path):

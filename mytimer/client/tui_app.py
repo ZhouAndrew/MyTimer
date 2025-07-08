@@ -10,8 +10,10 @@ live view that refreshes periodically.
 
 import argparse
 import asyncio
+from pathlib import Path
 from typing import List
 
+from client_settings import ClientSettings
 from .view_layer import ClientViewLayer
 from .sync_service import SyncService
 
@@ -34,11 +36,17 @@ class TUIApp:
 
 def main(args: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="MyTimer TUI application")
-    parser.add_argument("--url", default="http://127.0.0.1:8000", help="API base URL")
+    default_url = ClientSettings.load(Path.home() / ".timercli" / "settings.json").server_url
+    parser.add_argument("--url", default=default_url, help="API base URL")
     parser.add_argument("--once", action="store_true", help="Render one snapshot and exit")
     parsed = parser.parse_args(args)
 
-    app = TUIApp(parsed.url)
+    url = parsed.url.rstrip("/")
+    settings = ClientSettings.load(Path.home() / ".timercli" / "settings.json")
+    if url != settings.server_url:
+        settings.server_url = url
+        settings.save(Path.home() / ".timercli" / "settings.json")
+    app = TUIApp(url)
     if parsed.once:
         print(asyncio.run(app.run_once()))
     else:

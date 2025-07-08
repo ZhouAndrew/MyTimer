@@ -118,9 +118,15 @@ class InputHandler:
 
 def main(argv: Optional[list[str]] = None) -> None:
     parser = argparse.ArgumentParser(description="Input handler CLI")
-    parser.add_argument("--url", default="http://127.0.0.1:8000", help="API base URL")
+    default_url = ClientSettings.load(SETTINGS_PATH).server_url
+    parser.add_argument("--url", default=default_url, help="API base URL")
     args = parser.parse_args(argv)
-    svc = SyncService(args.url)
+    url = args.url.rstrip("/")
+    settings = ClientSettings.load(SETTINGS_PATH)
+    if url != settings.server_url:
+        settings.server_url = url
+        settings.save(SETTINGS_PATH)
+    svc = SyncService(url)
     handler = InputHandler(svc)
     asyncio.run(handler.run())
 

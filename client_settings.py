@@ -54,6 +54,7 @@ class ClientSettings:
     def save(self, path: str | Path) -> None:
         """Write settings to ``path`` as JSON."""
         file_path = Path(path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         with file_path.open("w", encoding="utf-8") as f:
             json.dump(asdict(self), f)
 
