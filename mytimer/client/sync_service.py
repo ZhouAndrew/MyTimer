@@ -30,51 +30,85 @@ class TimerState:
 class SyncService:
     """Maintain WebSocket sync with the API server and expose REST helpers."""
 
-    def __init__(self, base_url: str) -> None:
+    def __init__(self, base_url: str, reconnect_interval: float = 1.0) -> None:
         self.base_url = base_url.rstrip("/")
         self.ws_url = self.base_url.replace("http", "ws", 1) + "/ws"
         self.client = httpx.AsyncClient(base_url=self.base_url)
         self.state: Dict[str, TimerState] = {}
         self._ws: Optional[websockets.WebSocketClientProtocol] = None
         self._recv_task: Optional[asyncio.Task[None]] = None
+        self._running = False
+        self.reconnect_interval = reconnect_interval
+
 
     async def connect(self) -> None:
         """Establish the WebSocket connection and start the receive loop."""
+        if self._recv_task:
+            return
+        self._running = True
+        # Open initial connection and fetch state so callers can use the service
         self._ws = await websockets.connect(self.ws_url)
+        self.connected = True
+
         self._recv_task = asyncio.create_task(self._recv_loop())
 
-    async def _recv_loop(self) -> None:
-        assert self._ws is not None
-        try:
-            async for message in self._ws:
-                data = json.loads(message)
-                if isinstance(data, dict) and "type" in data:
-                    if data.get("type") == "update":
-                        tid = str(data["timer_id"])
-                        state = self.state.get(tid)
-                        if state:
-                            state.remaining = data["remaining"]
-                            state.running = data.get("running", state.running)
-                            state.finished = data["finished"]
-                            state.duration = data.get("duration", state.duration)
-                        else:
-                            self.state[tid] = TimerState(
-                                duration=data.get("duration", data["remaining"]),
-                                remaining=data["remaining"],
-                                running=data.get("running", not data["finished"]),
-                                finished=data["finished"],
-                            )
+    async def _fetch_state(self) -> None:
+        resp = await self.client.get("/timers")
+        resp.raise_for_status()
+        data = resp.json()
+        self.state = {str(tid): TimerState(**info) for tid, info in data.items()}
+
+    def _handle_message(self, message: str) -> None:
+        data = json.loads(message)
+        if isinstance(data, dict) and "type" in data:
+            if data.get("type") == "update":
+                tid = str(data["timer_id"])
+                state = self.state.get(tid)
+                if state:
+                    state.remaining = data["remaining"]
+                    state.running = data.get("running", state.running)
+                    state.finished = data["finished"]
+                    state.duration = data.get("duration", state.duration)
                 else:
-                    self.state = {
-                        str(tid): TimerState(**info) for tid, info in data.items()
-                    }
-        except websockets.ConnectionClosed:
-            pass
+                    self.state[tid] = TimerState(
+                        duration=data.get("duration", data["remaining"]),
+                        remaining=data["remaining"],
+                        running=data.get("running", not data["finished"]),
+                        finished=data["finished"],
+                    )
+        else:
+            self.state = {
+                str(tid): TimerState(**info) for tid, info in data.items()
+            }
+
+    async def _recv_loop(self) -> None:
+        while self._running:
+            try:
+                if self._ws is None:
+                    self._ws = await websockets.connect(self.ws_url)
+                    await self._fetch_state()
+                async for message in self._ws:
+                    self._handle_message(message)
+            except websockets.ConnectionClosed:
+                if not self._running:
+                    break
+            except Exception:
+                if not self._running:
+                    break
+            finally:
+                if self._ws:
+                    with contextlib.suppress(Exception):
+                        await self._ws.close()
+                self._ws = None
+            if self._running:
+                await asyncio.sleep(self.reconnect_interval)
 
     async def close(self) -> None:
         """Close WebSocket connection and HTTP client."""
+        self._running = False
         if self._ws is not None:
             await self._ws.close()
+            self.connected = False
         if self._recv_task is not None:
             self._recv_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):

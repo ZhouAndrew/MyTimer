@@ -41,3 +41,27 @@ def test_tui_app_once(start_server):
     )
     assert result.returncode == 0
     assert str(timer_id) in result.stdout
+    assert "http://127.0.0.1:8004" in result.stdout
+
+
+def test_tui_app_interactive(start_server):
+    # ensure no existing timers
+    data = requests.get("http://127.0.0.1:8004/timers", timeout=5).json()
+    for tid in list(data.keys()):
+        requests.delete(f"http://127.0.0.1:8004/timers/{tid}", timeout=5)
+
+    resp = requests.post("http://127.0.0.1:8004/timers", params={"duration": 5}, timeout=5)
+    timer_id = resp.json()["timer_id"]
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "mytimer.client.tui_app", "--url", "http://127.0.0.1:8004"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    time.sleep(1)
+    cmds = "p\n" "r\n" "d\n" "q\n"
+    stdout, stderr = proc.communicate(cmds, timeout=10)
+    assert proc.returncode == 0
+    data = requests.get("http://127.0.0.1:8004/timers", timeout=5).json()
+    assert str(timer_id) not in data

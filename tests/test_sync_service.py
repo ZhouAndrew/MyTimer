@@ -67,3 +67,58 @@ async def test_sync_flow(start_server):
     assert str(timer_id) not in svc.state
 
     await svc.close()
+
+
+@pytest.mark.asyncio
+async def test_multi_client_sync(start_server):
+    c1 = SyncService("http://127.0.0.1:8002")
+    c2 = SyncService("http://127.0.0.1:8002")
+    await c1.connect()
+    await c2.connect()
+
+    tid = await c1.create_timer(4)
+    for _ in range(20):
+        if str(tid) in c2.state:
+            break
+        await asyncio.sleep(0.1)
+    assert str(tid) in c2.state
+
+    await c2.tick(1)
+    await asyncio.sleep(0.2)
+    assert c1.state[str(tid)].remaining == 3
+
+    await c1.remove_timer(tid)
+    await asyncio.sleep(0.2)
+    assert str(tid) not in c1.state
+    assert str(tid) not in c2.state
+
+    await c1.close()
+    await c2.close()
+
+
+@pytest.mark.asyncio
+async def test_reconnect_resync(start_server):
+    svc = SyncService("http://127.0.0.1:8002", reconnect_interval=0.1)
+    await svc.connect()
+
+    tid = await svc.create_timer(5)
+    for _ in range(20):
+        if str(tid) in svc.state:
+            break
+        await asyncio.sleep(0.1)
+    assert str(tid) in svc.state
+
+    # force close connection to trigger reconnect
+    await svc._ws.close()
+    await asyncio.sleep(0.2)
+
+    await svc.tick(1)
+    for _ in range(20):
+        state = svc.state.get(str(tid))
+        if state and state.remaining == 4:
+            break
+        await asyncio.sleep(0.1)
+
+    assert svc.state[str(tid)].remaining == 4
+
+    await svc.close()

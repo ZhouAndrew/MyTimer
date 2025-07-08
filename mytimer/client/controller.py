@@ -5,8 +5,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from typing import Any
+from typing import Any, List
 from pathlib import Path
+import difflib
+try:
+    import readline  # type: ignore
+except Exception:  # pragma: no cover - platform without readline
+    readline = None
 
 from client_settings import ClientSettings
 from .ringer import ring
@@ -15,15 +20,31 @@ import requests
 
 HELP_TEXT = """\
 Available commands:
-  create <seconds>  create a new timer
-  list              list all timers
-  pause <id>        pause a timer
-  resume <id>       resume a timer
-  remove <id>       remove a timer
-  tick <seconds>    advance all timers
-  help              show this help message
-  quit/exit         exit the shell
+  create <seconds>     create a new timer
+  list                 list all timers
+  pause <id|all>       pause a timer or all timers
+  resume <id|all>      resume a timer or all timers
+  remove <id|all>      remove a timer or all timers
+  clear/reset          remove all timers
+  tick <seconds>       advance all timers
+  help                 show this help message
+  quit/exit            exit the shell
 """
+
+COMMANDS: List[str] = [
+    "create",
+    "list",
+    "pause",
+    "resume",
+    "remove",
+    "clear",
+    "reset",
+    "tick",
+    "interactive",
+    "help",
+    "quit",
+    "exit",
+]
 
 SETTINGS_PATH = Path.home() / ".timercli" / "settings.json"
 
@@ -41,15 +62,48 @@ def _ring_if_needed(base_url: str) -> None:
         resp.raise_for_status()
         for t in resp.json().values():
             if t.get("finished"):
-                ring(settings.notify_sound)
+                ring(settings.notify_sound, settings.volume, settings.mute)
                 break
     except requests.RequestException:
         pass
 
 
+def _get_timers(base_url: str) -> dict[str, Any]:
+    resp = requests.get(f"{base_url}/timers", timeout=5)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def pause_all_timers(base_url: str) -> None:
+    for tid in _get_timers(base_url).keys():
+        requests.post(f"{base_url}/timers/{tid}/pause", timeout=5).raise_for_status()
+    print("paused all")
+
+
+def resume_all_timers(base_url: str) -> None:
+    for tid in _get_timers(base_url).keys():
+        requests.post(f"{base_url}/timers/{tid}/resume", timeout=5).raise_for_status()
+    print("resumed all")
+
+
+def remove_all_timers(base_url: str) -> None:
+    for tid in list(_get_timers(base_url).keys()):
+        requests.delete(f"{base_url}/timers/{tid}", timeout=5).raise_for_status()
+    print("removed all")
+
+
+def clear_timers(base_url: str) -> None:
+    remove_all_timers(base_url)
+
+
 def print_help() -> None:
     """Print interactive command help."""
     print(HELP_TEXT)
+
+
+def suggest_command(cmd: str) -> str | None:
+    matches = difflib.get_close_matches(cmd, COMMANDS, n=1)
+    return matches[0] if matches else None
 
 
 def handle_request_error(exc: requests.RequestException, base_url: str) -> None:
@@ -109,6 +163,9 @@ def tick(base_url: str, seconds: float) -> None:
 
 def interactive(base_url: str) -> None:
     """Run an interactive shell for sending timer commands."""
+    if readline:
+        readline.parse_and_bind("tab: complete")
+        readline.set_completer(lambda text, state: [c for c in COMMANDS if c.startswith(text)][state] if state < len([c for c in COMMANDS if c.startswith(text)]) else None)
     if sys.stdin.isatty():
         print("Type 'help' for available commands. 'quit' to exit.")
     while True:
@@ -118,6 +175,8 @@ def interactive(base_url: str) -> None:
             break
         if not line:
             continue
+        if readline:
+            readline.add_history(line)
         if line in {"quit", "exit"}:
             break
         parts = line.split()
@@ -131,16 +190,28 @@ def interactive(base_url: str) -> None:
                 create_timer(base_url, float(args[0]))
             elif cmd == "list" and not args:
                 list_timers(base_url)
+            elif cmd == "pause" and len(args) == 1 and args[0] == "all":
+                pause_all_timers(base_url)
+            elif cmd == "resume" and len(args) == 1 and args[0] == "all":
+                resume_all_timers(base_url)
+            elif cmd == "remove" and len(args) == 1 and args[0] == "all":
+                remove_all_timers(base_url)
             elif cmd == "pause" and len(args) == 1:
                 pause_timer(base_url, int(args[0]))
             elif cmd == "resume" and len(args) == 1:
                 resume_timer(base_url, int(args[0]))
             elif cmd == "remove" and len(args) == 1:
                 remove_timer(base_url, int(args[0]))
+            elif cmd in {"clear", "reset"} and not args:
+                clear_timers(base_url)
             elif cmd == "tick" and len(args) == 1:
                 tick(base_url, float(args[0]))
             else:
-                print("Unknown command")
+                suggestion = suggest_command(cmd)
+                if suggestion:
+                    print(f"Unknown command. Did you mean '{suggestion}'?")
+                else:
+                    print("Unknown command")
         except requests.HTTPError as exc:
             print(f"Error: {exc.response.status_code}")
         except requests.RequestException as exc:
@@ -160,18 +231,30 @@ def main() -> None:
             create_timer(base_url, float(parsed.args[0]))
         elif parsed.command == "list" and len(parsed.args) == 0:
             list_timers(base_url)
+        elif parsed.command == "pause" and parsed.args == ["all"]:
+            pause_all_timers(base_url)
+        elif parsed.command == "resume" and parsed.args == ["all"]:
+            resume_all_timers(base_url)
+        elif parsed.command == "remove" and parsed.args == ["all"]:
+            remove_all_timers(base_url)
         elif parsed.command == "pause" and len(parsed.args) == 1:
             pause_timer(base_url, int(parsed.args[0]))
         elif parsed.command == "resume" and len(parsed.args) == 1:
             resume_timer(base_url, int(parsed.args[0]))
         elif parsed.command == "remove" and len(parsed.args) == 1:
             remove_timer(base_url, int(parsed.args[0]))
+        elif parsed.command in {"clear", "reset"}:
+            clear_timers(base_url)
         elif parsed.command == "tick" and len(parsed.args) == 1:
             tick(base_url, float(parsed.args[0]))
         elif parsed.command == "interactive" or parsed.command is None:
             interactive(base_url)
         else:
-            parser.print_help()
+            suggestion = suggest_command(parsed.command or "") if parsed.command else None
+            if suggestion:
+                print(f"Unknown command. Did you mean '{suggestion}'?")
+            else:
+                parser.print_help()
     except requests.HTTPError as exc:
         print(f"Error: {exc.response.status_code}")
     except requests.RequestException as exc:
