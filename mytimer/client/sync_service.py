@@ -40,6 +40,7 @@ class SyncService:
         self._running = False
         self.reconnect_interval = reconnect_interval
 
+
     async def connect(self) -> None:
         """Establish the WebSocket connection and start the receive loop."""
         if self._recv_task:
@@ -47,7 +48,8 @@ class SyncService:
         self._running = True
         # Open initial connection and fetch state so callers can use the service
         self._ws = await websockets.connect(self.ws_url)
-        await self._fetch_state()
+        self.connected = True
+
         self._recv_task = asyncio.create_task(self._recv_loop())
 
     async def _fetch_state(self) -> None:
@@ -106,6 +108,7 @@ class SyncService:
         self._running = False
         if self._ws is not None:
             await self._ws.close()
+            self.connected = False
         if self._recv_task is not None:
             self._recv_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):

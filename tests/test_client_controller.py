@@ -70,3 +70,34 @@ def test_interactive_quit(start_server):
     proc.stdin.flush()
     stdout, stderr = proc.communicate(timeout=5)
     assert proc.returncode == 0
+
+
+def test_cli_all_commands(start_server):
+    tid1 = int(run_cli("create", "3"))
+    tid2 = int(run_cli("create", "4"))
+
+    run_cli("pause", "all")
+    run_cli("tick", "1")
+    data = json.loads(run_cli("list"))
+    assert data[str(tid1)]["remaining"] == 3
+    assert data[str(tid2)]["remaining"] == 4
+
+    run_cli("resume", "all")
+    run_cli("tick", "1")
+    data = json.loads(run_cli("list"))
+    assert data[str(tid1)]["remaining"] == 2
+    assert data[str(tid2)]["remaining"] == 3
+
+    run_cli("remove", "all")
+    data = json.loads(run_cli("list"))
+    assert data == {}
+
+    run_cli("create", "2")
+    run_cli("clear")
+    data = json.loads(run_cli("list"))
+    assert data == {}
+
+
+def test_cli_suggestion(start_server):
+    out = run_cli("creat")  # misspelled create
+    assert "Did you mean 'create'" in out
