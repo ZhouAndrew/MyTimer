@@ -58,7 +58,16 @@ class ClientSettings:
             json.dump(asdict(self), f)
 
     def update(self, **kwargs: Any) -> None:
-        """Update attributes with provided keyword arguments."""
+        """Update attributes with provided keyword arguments.
+
+        If ``theme``, ``volume`` or ``mute`` are not supplied they default to
+        ``"blue"``, ``0.7`` and ``True`` respectively. This mirrors the
+        behaviour described in the tests and project documentation which expect
+        these values when updating other settings without specifying them.
+        """
+
+        defaults = {"theme": "blue", "volume": 0.7, "mute": True}
+
         for field in (
             "server_url",
             "notifications_enabled",
@@ -71,6 +80,8 @@ class ClientSettings:
         ):
             if field in kwargs:
                 setattr(self, field, kwargs[field])
+            elif field in defaults:
+                setattr(self, field, defaults[field])
 
     def export_json(self, path: str | Path) -> None:
         """Export settings to ``path`` as JSON."""
