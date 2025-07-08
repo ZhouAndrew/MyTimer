@@ -3,10 +3,12 @@ from __future__ import annotations
 """Interactive CLI tool for editing MyTimer settings."""
 
 import argparse
+import asyncio
 from pathlib import Path
 from typing import Iterable
 
 from client_settings import ClientSettings
+from . import server_discovery
 
 SETTINGS_PATH = Path.home() / ".timercli" / "settings.json"
 
@@ -39,6 +41,10 @@ class CLISettings:
                 f"2. Theme: {self.settings.theme}\n"
                 f"3. Notifications Enabled: {self.settings.notifications_enabled}\n"
                 f"4. Notify Sound: {self.settings.notify_sound}\n"
+                f"5. Volume: {self.settings.volume}\n"
+                f"6. Mute: {self.settings.mute}\n"
+                "7. Discover servers\n"
+                "8. Save and exit\n"
                 f"5. Auth Token: {self.settings.auth_token}\n"
                 f"6. Device Name: {self.settings.device_name}\n"
                 "7. Save and exit\n"
@@ -66,6 +72,30 @@ class CLISettings:
                 if value:
                     self.settings.notify_sound = value
             elif choice == "5":
+                value = self._prompt("Volume (0-1): ", it)
+                if value:
+                    try:
+                        self.settings.volume = max(0.0, min(1.0, float(value)))
+                    except ValueError:
+                        print("Invalid volume")
+            elif choice == "6":
+                value = self._prompt("Mute (y/n): ", it).lower()
+                if value in {"y", "yes"}:
+                    self.settings.mute = True
+                elif value in {"n", "no"}:
+                    self.settings.mute = False
+            elif choice == "7":
+                servers = asyncio.run(server_discovery.discover_server(addr="127.0.0.1"))
+                if not servers:
+                    print("No server found")
+                else:
+                    for idx, (ip, port) in enumerate(servers, start=1):
+                        print(f"{idx}. http://{ip}:{port}")
+                    sel = self._prompt("Select server: ", it)
+                    if sel.isdigit() and 1 <= int(sel) <= len(servers):
+                        ip, port = servers[int(sel) - 1]
+                        self.settings.server_url = f"http://{ip}:{port}"
+            elif choice == "8":
                 value = self._prompt("Auth Token: ", it)
                 if value:
                     self.settings.auth_token = value
@@ -91,6 +121,9 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--enable-notify", action="store_true", help="Enable notifications")
     parser.add_argument("--disable-notify", action="store_true", help="Disable notifications")
     parser.add_argument("--notify-sound", help="Notification sound")
+    parser.add_argument("--volume", type=float, help="Notification volume 0-1")
+    parser.add_argument("--mute", action="store_true", help="Mute notifications")
+    parser.add_argument("--unmute", action="store_true", help="Unmute notifications")
     parser.add_argument("--auth-token", help="Authentication token")
     parser.add_argument("--device-name", help="Device name")
     parser.add_argument("--print", action="store_true", help="Print current settings")
@@ -114,6 +147,14 @@ def main(argv: list[str] | None = None) -> None:
     if args.notify_sound:
         cli.settings.notify_sound = args.notify_sound
         changed = True
+    if args.volume is not None:
+        cli.settings.volume = max(0.0, min(1.0, args.volume))
+        changed = True
+    if args.mute:
+        cli.settings.mute = True
+        changed = True
+    if args.unmute:
+        cli.settings.mute = False
     if args.auth_token:
         cli.settings.auth_token = args.auth_token
         changed = True
