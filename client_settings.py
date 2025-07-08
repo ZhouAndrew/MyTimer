@@ -15,9 +15,13 @@ class ClientSettings:
     server_url: str = "http://127.0.0.1:8000"
     notifications_enabled: bool = True
     notify_sound: str = "default"
+
+    auth_token: str | None = None
+    device_name: str | None = None
     theme: str = "light"
     volume: float = 1.0
     mute: bool = False
+
 
     @classmethod
     def load(cls, path: str | Path) -> "ClientSettings":
@@ -37,9 +41,14 @@ class ClientSettings:
                 "notifications_enabled", cls.notifications_enabled
             ),
             notify_sound=data.get("notify_sound", cls.notify_sound),
+
+            auth_token=data.get("auth_token"),
+            device_name=data.get("device_name"),
+
             theme=data.get("theme", cls.theme),
             volume=float(data.get("volume", cls.volume)),
             mute=bool(data.get("mute", cls.mute)),
+
         )
 
     def save(self, path: str | Path) -> None:
@@ -54,9 +63,21 @@ class ClientSettings:
             "server_url",
             "notifications_enabled",
             "notify_sound",
+            "auth_token",
+            "device_name",
             "theme",
             "volume",
             "mute",
         ):
             if field in kwargs:
                 setattr(self, field, kwargs[field])
+
+    def export_json(self, path: str | Path) -> None:
+        """Export settings to ``path`` as JSON."""
+        self.save(path)
+
+    @classmethod
+    def import_json(cls, path: str | Path) -> "ClientSettings":
+        """Load settings from ``path`` using :meth:`load`."""
+        return cls.load(path)
+
