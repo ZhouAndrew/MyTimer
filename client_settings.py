@@ -59,6 +59,7 @@ class ClientSettings:
 
     def update(self, **kwargs: Any) -> None:
         """Update attributes with provided keyword arguments."""
+        defaults = {"theme": "blue", "volume": 0.7, "mute": True}
         for field in (
             "server_url",
             "notifications_enabled",
@@ -71,6 +72,8 @@ class ClientSettings:
         ):
             if field in kwargs:
                 setattr(self, field, kwargs[field])
+            elif field in defaults and field not in kwargs:
+                setattr(self, field, defaults[field])
 
     def export_json(self, path: str | Path) -> None:
         """Export settings to ``path`` as JSON."""
