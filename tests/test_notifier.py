@@ -50,3 +50,19 @@ async def test_notifier_only_once():
     await notifier.stop()
 
     assert count == 1 and timer_id in tm.timers
+
+
+@pytest.mark.asyncio
+async def test_notifier_silent_mode(capsys):
+    tm = TimerManager()
+    tid = tm.create_timer(1)
+
+    notifier = Notifier(tm, None, mode="silent")
+    await notifier.start(interval=0.01)
+
+    tm.tick(1)
+    await asyncio.sleep(0.05)
+    await notifier.stop()
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
