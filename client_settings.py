@@ -56,6 +56,17 @@ class ClientSettings:
             json.dump(asdict(self), f)
 
     def update(self, **kwargs: Any) -> None:
+        """Update attributes with provided keyword arguments."""
+        self.server_url = kwargs.get("server_url", self.server_url)
+        self.notifications_enabled = kwargs.get(
+            "notifications_enabled", self.notifications_enabled
+        )
+        self.notify_sound = kwargs.get("notify_sound", self.notify_sound)
+        self.auth_token = kwargs.get("auth_token", self.auth_token)
+        self.device_name = kwargs.get("device_name", self.device_name)
+        self.theme = kwargs.get("theme", "blue")
+        self.volume = kwargs.get("volume", 0.7)
+        self.mute = kwargs.get("mute", True)
         """Update attributes with provided keyword arguments.
 
         Only a subset of fields are supported. Theme, volume and mute are
