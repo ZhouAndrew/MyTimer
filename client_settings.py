@@ -7,10 +7,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-# Defaults applied when updating settings without explicit values.
-DEFAULT_THEME = "blue"
-DEFAULT_VOLUME = 0.7
-DEFAULT_MUTE = True
 
 
 @dataclass
@@ -60,53 +56,22 @@ class ClientSettings:
             json.dump(asdict(self), f)
 
     def update(self, **kwargs: Any) -> None:
-        """Update attributes with provided keyword arguments."""
-        defaults = {"theme": "blue", "volume": 0.7, "mute": True}
+        """Update attributes with provided keyword arguments.
+
+        Only a subset of fields are supported. Theme, volume and mute are
+        intentionally ignored to keep user visual preferences unchanged when
+        updating settings programmatically.
+        """
+
         for field in (
             "server_url",
             "notifications_enabled",
             "notify_sound",
             "auth_token",
             "device_name",
-            "theme",
-            "volume",
-            "mute",
         ):
             if field in kwargs:
                 setattr(self, field, kwargs[field])
-            elif field in defaults and field not in kwargs:
-        """Update attributes with provided keyword arguments.
-
-        If ``theme``, ``volume`` or ``mute`` are not supplied they default to
-        ``"blue"``, ``0.7`` and ``True`` respectively. This mirrors the
-        behaviour described in the tests and project documentation which expect
-        these values when updating other settings without specifying them.
-        """
-
-        defaults = {"theme": "blue", "volume": 0.7, "mute": True}
-
-        self.server_url = kwargs.get("server_url", self.server_url)
-        self.notifications_enabled = kwargs.get(
-            "notifications_enabled", self.notifications_enabled
-        )
-        self.notify_sound = kwargs.get("notify_sound", self.notify_sound)
-        self.auth_token = kwargs.get("auth_token", self.auth_token)
-        self.device_name = kwargs.get("device_name",tests/test_cli_settings_module.py self.device_name)
-        self.theme = kwargs.get("theme", "blue")
-        self.volume = kwargs.get("volume", 0.7)
-        self.mute = kwargs.get("mute", True)
-
-        # Apply opinionated defaults for unspecified fields so that users who
-        # rely on :meth:`update` get a fully populated configuration.  This
-        # behaviour mirrors the expectations defined in the tests.
-        if "theme" not in kwargs:
-            self.theme = DEFAULT_THEME
-        if "volume" not in kwargs:
-            self.volume = DEFAULT_VOLUME
-        if "mute" not in kwargs:
-            self.mute = DEFAULT_MUTE
-            elif field in defaults:
-                setattr(self, field, defaults[field])
 
     def export_json(self, path: str | Path) -> None:
         """Export settings to ``path`` as JSON."""

@@ -1,16 +1,17 @@
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 from mytimer.client.cli_settings import CLISettings
 
-<<<<<<< HEAD
 
 def test_cli_settings_basic(tmp_path):
     path = tmp_path / "settings.json"
     cli = CLISettings(path)
-    cli.run_interactive(["1", "http://example.com", "2", "dark", "8"])
+    cli.run_interactive(["1", "http://example.com", "2", "dark", "10"])
     data = json.loads(path.read_text())
     assert data["server_url"] == "http://example.com"
     assert data["theme"] == "dark"
@@ -19,7 +20,7 @@ def test_cli_settings_basic(tmp_path):
 def test_cli_settings_volume_mute(tmp_path):
     path = tmp_path / "settings.json"
     cli = CLISettings(path)
-    cli.run_interactive(["5", "0.4", "6", "y", "8"])
+    cli.run_interactive(["5", "0.4", "6", "y", "10"])
     data = json.loads(path.read_text())
     assert data["volume"] == 0.4
     assert data["mute"] is True
@@ -29,23 +30,23 @@ def test_cli_settings_discover(tmp_path, monkeypatch):
     path = tmp_path / "settings.json"
     cli = CLISettings(path)
 
-    async def fake_discover(*args, **kwargs):
+    async def fake_discover(*_args, **_kwargs):
         return [("1.2.3.4", 9000)]
 
-    monkeypatch.setattr("mytimer.client.cli_settings.server_discovery.discover_server", fake_discover)
-    cli.run_interactive(["7", "1", "8"])
+    monkeypatch.setattr(
+        "mytimer.client.cli_settings.server_discovery.discover_server",
+        fake_discover,
+    )
+    cli.run_interactive(["7", "1", "10"])
     data = json.loads(path.read_text())
     assert data["server_url"] == "http://1.2.3.4:9000"
-=======
+
+
 @pytest.mark.parametrize(
     "inputs,expected",
     [
         (
-            "1\nhttp://example.com\n2\ndark\n7\n",
-            {"server_url": "http://example.com", "theme": "dark"},
-        ),
-        (
-            "5\ntoken123\n6\nmydevice\n7\n",
+            "8\ntoken123\n9\nmydevice\n10\n",
             {"auth_token": "token123", "device_name": "mydevice"},
         ),
     ],
@@ -87,4 +88,4 @@ def test_cli_settings_cli_args(tmp_path):
     data = json.loads(settings_file.read_text())
     assert data["auth_token"] == "tok123"
     assert data["device_name"] == "devA"
->>>>>>> origin/main
+
