@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import contextlib
 import sys
+from pathlib import Path
 from typing import List
 
 from rich.console import Console, Group
@@ -14,6 +15,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
 
+from client_settings import ClientSettings
 from .sync_service import SyncService, TimerState
 
 
@@ -150,11 +152,17 @@ class ClientViewLayer:
 
 def main(args: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Client view layer")
-    parser.add_argument("--url", default="http://127.0.0.1:8000", help="API base URL")
+    default_url = ClientSettings.load(Path.home() / ".timercli" / "settings.json").server_url
+    parser.add_argument("--url", default=default_url, help="API base URL")
     parser.add_argument("--once", action="store_true", help="Render one snapshot and exit")
     parsed = parser.parse_args(args)
 
-    svc = SyncService(parsed.url)
+    url = parsed.url.rstrip("/")
+    settings = ClientSettings.load(Path.home() / ".timercli" / "settings.json")
+    if url != settings.server_url:
+        settings.server_url = url
+        settings.save(Path.home() / ".timercli" / "settings.json")
+    svc = SyncService(url)
     view = ClientViewLayer(svc)
     if parsed.once:
         print(asyncio.run(view.show_once()))

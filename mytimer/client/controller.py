@@ -222,10 +222,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="MyTimer client controller")
     parser.add_argument("command", help="Command to run", nargs="?")
     parser.add_argument("args", nargs="*")
-    parser.add_argument("--url", default="http://127.0.0.1:8000", help="API server base URL")
+    default_url = ClientSettings.load(SETTINGS_PATH).server_url
+    parser.add_argument("--url", default=default_url, help="API server base URL")
     parsed = parser.parse_args()
 
     base_url = parsed.url.rstrip("/")
+    settings = ClientSettings.load(SETTINGS_PATH)
+    if base_url != settings.server_url:
+        settings.server_url = base_url
+        settings.save(SETTINGS_PATH)
     try:
         if parsed.command == "create" and len(parsed.args) == 1:
             create_timer(base_url, float(parsed.args[0]))

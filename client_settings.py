@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 
+
 @dataclass
 class ClientSettings:
     """Persist and manage client-side configuration."""
@@ -50,6 +51,7 @@ class ClientSettings:
     def save(self, path: str | Path) -> None:
         """Write settings to ``path`` as JSON."""
         file_path = Path(path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         with file_path.open("w", encoding="utf-8") as f:
             json.dump(asdict(self), f)
 
@@ -65,6 +67,22 @@ class ClientSettings:
         self.theme = kwargs.get("theme", "blue")
         self.volume = kwargs.get("volume", 0.7)
         self.mute = kwargs.get("mute", True)
+        """Update attributes with provided keyword arguments.
+
+        Only a subset of fields are supported. Theme, volume and mute are
+        intentionally ignored to keep user visual preferences unchanged when
+        updating settings programmatically.
+        """
+
+        for field in (
+            "server_url",
+            "notifications_enabled",
+            "notify_sound",
+            "auth_token",
+            "device_name",
+        ):
+            if field in kwargs:
+                setattr(self, field, kwargs[field])
 
     def export_json(self, path: str | Path) -> None:
         """Export settings to ``path`` as JSON."""

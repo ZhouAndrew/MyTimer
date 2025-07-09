@@ -6,8 +6,13 @@ import argparse
 import asyncio
 import json
 import sys
-from typing import Optional
+from typing import Optional, Any, List
 from pathlib import Path
+import difflib
+try:
+    import readline  # type: ignore
+except Exception:  # pragma: no cover - platform without readline
+    readline = None
 
 from client_settings import ClientSettings
 from .ringer import ring
@@ -16,13 +21,29 @@ HELP_TEXT = """\
 Available commands:
   create <seconds>  create a new timer
   list              list all timers
-  pause <id>        pause a timer
-  resume <id>       resume a timer
-  remove <id>       remove a timer
+  pause <id|all>    pause a timer or all timers
+  resume <id|all>   resume a timer or all timers
+  remove <id|all>   remove a timer or all timers
+  clear/reset       remove all timers
   tick <seconds>    advance all timers
   help              show this help message
   quit/exit/q       exit the shell
 """
+
+COMMANDS: List[str] = [
+    "create",
+    "list",
+    "pause",
+    "resume",
+    "remove",
+    "clear",
+    "reset",
+    "tick",
+    "help",
+    "quit",
+    "exit",
+    "q",
+]
 
 SETTINGS_PATH = Path.home() / ".timercli" / "settings.json"
 
@@ -46,10 +67,43 @@ async def _ring_if_needed(service: "SyncService") -> None:
         pass
 
 
+async def _get_timers(service: "SyncService") -> dict[str, Any]:
+    resp = await service.client.get("/timers")
+    resp.raise_for_status()
+    return resp.json()
+
+
+async def pause_all_timers(service: "SyncService") -> None:
+    for tid in (await _get_timers(service)).keys():
+        await service.pause_timer(int(tid))
+    print("paused all")
+
+
+async def resume_all_timers(service: "SyncService") -> None:
+    for tid in (await _get_timers(service)).keys():
+        await service.resume_timer(int(tid))
+    print("resumed all")
+
+
+async def remove_all_timers(service: "SyncService") -> None:
+    for tid in list((await _get_timers(service)).keys()):
+        await service.remove_timer(int(tid))
+    print("removed all")
+
+
+async def clear_timers(service: "SyncService") -> None:
+    await remove_all_timers(service)
+
+
 
 def print_help() -> None:
     """Print interactive command help."""
     print(HELP_TEXT)
+
+
+def suggest_command(cmd: str) -> str | None:
+    matches = difflib.get_close_matches(cmd, COMMANDS, n=1)
+    return matches[0] if matches else None
 
 from .sync_service import SyncService
 
@@ -69,6 +123,8 @@ class InputHandler:
         if not parts:
             return True
         cmd, *args = parts
+        if readline and line.strip():
+            readline.add_history(line.strip())
         try:
             if cmd in {"quit", "exit", "q"}:
                 return False
@@ -82,6 +138,12 @@ class InputHandler:
                 resp = await self.service.client.get("/timers")
                 resp.raise_for_status()
                 print(json.dumps(resp.json()))
+            elif cmd == "pause" and len(args) == 1 and args[0] == "all":
+                await pause_all_timers(self.service)
+            elif cmd == "resume" and len(args) == 1 and args[0] == "all":
+                await resume_all_timers(self.service)
+            elif cmd == "remove" and len(args) == 1 and args[0] == "all":
+                await remove_all_timers(self.service)
             elif cmd == "pause" and len(args) == 1:
                 await self.service.pause_timer(int(args[0]))
                 print("paused")
@@ -91,12 +153,18 @@ class InputHandler:
             elif cmd == "remove" and len(args) == 1:
                 await self.service.remove_timer(int(args[0]))
                 print("removed")
+            elif cmd in {"clear", "reset"} and len(args) == 0:
+                await clear_timers(self.service)
             elif cmd == "tick" and len(args) == 1:
                 await self.service.tick(float(args[0]))
                 print("ticked")
                 await _ring_if_needed(self.service)
             else:
-                print("Unknown command")
+                suggestion = suggest_command(cmd)
+                if suggestion:
+                    print(f"Unknown command. Did you mean '{suggestion}'?")
+                else:
+                    print("Unknown command")
         except Exception as exc:  # pragma: no cover - unexpected errors
             print(f"Error: {exc}")
         return True
@@ -106,6 +174,13 @@ class InputHandler:
         await self.service.connect()
         if sys.stdin.isatty():
             print("Type 'help' for available commands. 'quit' to exit.")
+        if readline:
+            readline.parse_and_bind("tab: complete")
+            readline.set_completer(
+                lambda text, state: [c for c in COMMANDS if c.startswith(text)][state]
+                if state < len([c for c in COMMANDS if c.startswith(text)])
+                else None
+            )
         loop = asyncio.get_running_loop()
         try:
             while True:
@@ -118,9 +193,15 @@ class InputHandler:
 
 def main(argv: Optional[list[str]] = None) -> None:
     parser = argparse.ArgumentParser(description="Input handler CLI")
-    parser.add_argument("--url", default="http://127.0.0.1:8000", help="API base URL")
+    default_url = ClientSettings.load(SETTINGS_PATH).server_url
+    parser.add_argument("--url", default=default_url, help="API base URL")
     args = parser.parse_args(argv)
-    svc = SyncService(args.url)
+    url = args.url.rstrip("/")
+    settings = ClientSettings.load(SETTINGS_PATH)
+    if url != settings.server_url:
+        settings.server_url = url
+        settings.save(SETTINGS_PATH)
+    svc = SyncService(url)
     handler = InputHandler(svc)
     asyncio.run(handler.run())
 
