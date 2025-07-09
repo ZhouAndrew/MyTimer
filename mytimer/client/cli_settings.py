@@ -44,10 +44,9 @@ class CLISettings:
                 f"5. Volume: {self.settings.volume}\n"
                 f"6. Mute: {self.settings.mute}\n"
                 "7. Discover servers\n"
-                "8. Save and exit\n"
-                f"5. Auth Token: {self.settings.auth_token}\n"
-                f"6. Device Name: {self.settings.device_name}\n"
-                "7. Save and exit\n"
+                f"8. Auth Token: {self.settings.auth_token}\n"
+                f"9. Device Name: {self.settings.device_name}\n"
+                "10. Save and exit\n"
                 "q. Quit\n"
                 "Choice: ",
                 end="",
@@ -99,11 +98,11 @@ class CLISettings:
                 value = self._prompt("Auth Token: ", it)
                 if value:
                     self.settings.auth_token = value
-            elif choice == "6":
+            elif choice == "9":
                 value = self._prompt("Device Name: ", it)
                 if value:
                     self.settings.device_name = value
-            elif choice == "7":
+            elif choice == "10":
                 self.save()
                 print("Saved.")
                 break
