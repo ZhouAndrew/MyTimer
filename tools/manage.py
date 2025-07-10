@@ -25,6 +25,7 @@ from tools import server_discovery
 
 PID_FILE = Path("server.pid")
 LOG_FILE = Path("server.log")
+TUI_PID_FILE = Path("tui.pid")
 
 COMMANDS = [
     "install",
@@ -194,10 +195,27 @@ def run_tui(url: str, once: bool) -> None:
     server = ensure_server(url)
     if not server:
         return
+    if not once:
+        if TUI_PID_FILE.exists():
+            try:
+                pid = int(TUI_PID_FILE.read_text())
+                os.kill(pid, 0)
+            except Exception:
+                TUI_PID_FILE.unlink(missing_ok=True)
+            else:
+                print("TUI already running")
+                return
     cmd = [sys.executable, "-m", "mytimer.client.tui_app", "--url", server]
     if once:
         cmd.append("--once")
-    subprocess.call(cmd)
+    proc = subprocess.Popen(cmd)
+    if not once:
+        TUI_PID_FILE.write_text(str(proc.pid))
+    try:
+        proc.wait()
+    finally:
+        if not once and TUI_PID_FILE.exists():
+            TUI_PID_FILE.unlink()
 
 
 def run_auto_tick(url: str, interval: float) -> None:
