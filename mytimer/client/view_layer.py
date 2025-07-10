@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import os
 import sys
 import os
 from pathlib import Path
@@ -130,8 +131,18 @@ class ClientViewLayer:
                     if tid is not None:
                         await self.service.remove_timer(int(tid))
 
+        async def tick_loop() -> None:
+            nonlocal running
+            while running:
+                try:
+                    await self.service.tick(1.0)
+                except Exception:
+                    pass
+                await asyncio.sleep(1.0)
+
         with Live(self._build_panel(), console=console, refresh_per_second=2) as live:
             task = asyncio.create_task(input_loop())
+            tick_task = asyncio.create_task(tick_loop())
             try:
                 while running:
                     live.update(self._build_panel())
@@ -139,10 +150,14 @@ class ClientViewLayer:
             except KeyboardInterrupt:
                 running = False
             task.cancel()
+            tick_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await task
+                await tick_task
         await self.service.close()
-        os.system("clear")
+
+        os.system("cls" if os.name == "nt" else "clear")
+
 
     def _current_id(self) -> str | None:
         if not self.service.state:

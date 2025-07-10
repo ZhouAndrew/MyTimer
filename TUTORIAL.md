@@ -78,6 +78,10 @@ python -m mytimer.client.controller interactive
 ```bash
 python -m mytimer.client.tui_app
 ```
+默认使用 WebSocket 与服务器保持同步，可通过 `--no-ws` 改为轮询模式：
+```bash
+python -m mytimer.client.tui_app --no-ws
+```
 
 ## 计时器管理逻辑
 
