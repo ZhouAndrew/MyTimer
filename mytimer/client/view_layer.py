@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import contextlib
 import sys
+import os
 from pathlib import Path
 from typing import List
 
@@ -141,6 +142,7 @@ class ClientViewLayer:
             with contextlib.suppress(asyncio.CancelledError):
                 await task
         await self.service.close()
+        os.system("clear")
 
     def _current_id(self) -> str | None:
         if not self.service.state:

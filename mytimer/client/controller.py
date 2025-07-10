@@ -204,8 +204,11 @@ def interactive(base_url: str) -> None:
                 remove_timer(base_url, int(args[0]))
             elif cmd in {"clear", "reset"} and not args:
                 clear_timers(base_url)
-            elif cmd == "tick" and len(args) == 1:
-                tick(base_url, float(args[0]))
+            elif cmd == "tick":
+                if len(args) == 1:
+                    tick(base_url, float(args[0]))
+                else:
+                    print("Usage: tick <seconds>")
             else:
                 suggestion = suggest_command(cmd)
                 if suggestion:
@@ -250,8 +253,11 @@ def main() -> None:
             remove_timer(base_url, int(parsed.args[0]))
         elif parsed.command in {"clear", "reset"}:
             clear_timers(base_url)
-        elif parsed.command == "tick" and len(parsed.args) == 1:
-            tick(base_url, float(parsed.args[0]))
+        elif parsed.command == "tick":
+            if len(parsed.args) == 1:
+                tick(base_url, float(parsed.args[0]))
+            else:
+                print("Usage: tick <seconds>")
         elif parsed.command == "interactive" or parsed.command is None:
             interactive(base_url)
         else:
