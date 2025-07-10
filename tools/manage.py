@@ -61,8 +61,15 @@ def run_install() -> None:
 
 
 def run_tests() -> None:
-    """Run the project's test suite using pytest."""
-    subprocess.check_call(["pytest", "-q"])
+    """Run the project's test suite with coverage."""
+    subprocess.check_call(
+        [
+            "pytest",
+            "--cov=mytimer",
+            "--cov=tools",
+            "-q",
+        ]
+    )
 
 
 def run_update() -> None:
