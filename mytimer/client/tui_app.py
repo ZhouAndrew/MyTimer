@@ -21,8 +21,8 @@ from .sync_service import SyncService
 class TUIApp:
     """Bootstrap the Rich application and manage its lifecycle."""
 
-    def __init__(self, base_url: str) -> None:
-        self.service = SyncService(base_url)
+    def __init__(self, base_url: str, *, use_websocket: bool = True) -> None:
+        self.service = SyncService(base_url, use_websocket=use_websocket)
         self.view = ClientViewLayer(self.service)
 
     async def run_once(self) -> str:
@@ -39,6 +39,11 @@ def main(args: List[str] | None = None) -> None:
     default_url = ClientSettings.load(Path.home() / ".timercli" / "settings.json").server_url
     parser.add_argument("--url", default=default_url, help="API base URL")
     parser.add_argument("--once", action="store_true", help="Render one snapshot and exit")
+    parser.add_argument(
+        "--no-ws",
+        action="store_true",
+        help="Disable WebSocket sync and use HTTP polling",
+    )
     parsed = parser.parse_args(args)
 
     url = parsed.url.rstrip("/")
@@ -46,7 +51,7 @@ def main(args: List[str] | None = None) -> None:
     if url != settings.server_url:
         settings.server_url = url
         settings.save(Path.home() / ".timercli" / "settings.json")
-    app = TUIApp(url)
+    app = TUIApp(url, use_websocket=not parsed.no_ws)
     if parsed.once:
         print(asyncio.run(app.run_once()))
     else:

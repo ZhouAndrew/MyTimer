@@ -28,9 +28,15 @@ class TimerState:
 
 
 class SyncService:
-    """Maintain WebSocket sync with the API server and expose REST helpers."""
+    """Maintain timer state synchronization via WebSocket or HTTP polling."""
 
-    def __init__(self, base_url: str, reconnect_interval: float = 1.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        reconnect_interval: float = 1.0,
+        *,
+        use_websocket: bool = True,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.ws_url = self.base_url.replace("http", "ws", 1) + "/ws"
         self.client = httpx.AsyncClient(base_url=self.base_url)
@@ -39,18 +45,22 @@ class SyncService:
         self._recv_task: Optional[asyncio.Task[None]] = None
         self._running = False
         self.reconnect_interval = reconnect_interval
+        self.use_websocket = use_websocket
+        self.connected = False
 
 
     async def connect(self) -> None:
-        """Establish the WebSocket connection and start the receive loop."""
+        """Start syncing timer state using WebSocket or HTTP polling."""
         if self._recv_task:
             return
         self._running = True
-        # Open initial connection and fetch state so callers can use the service
-        self._ws = await websockets.connect(self.ws_url)
-        self.connected = True
-
-        self._recv_task = asyncio.create_task(self._recv_loop())
+        if self.use_websocket:
+            self._ws = await websockets.connect(self.ws_url)
+            self.connected = True
+            self._recv_task = asyncio.create_task(self._recv_loop())
+        else:
+            self._recv_task = asyncio.create_task(self._poll_loop())
+        await self._fetch_state()
 
     async def _fetch_state(self) -> None:
         resp = await self.client.get("/timers")
@@ -103,16 +113,27 @@ class SyncService:
             if self._running:
                 await asyncio.sleep(self.reconnect_interval)
 
+    async def _poll_loop(self) -> None:
+        while self._running:
+            try:
+                await self._fetch_state()
+            except Exception:
+                if not self._running:
+                    break
+            await asyncio.sleep(self.reconnect_interval)
+
     async def close(self) -> None:
         """Close WebSocket connection and HTTP client."""
         self._running = False
         if self._ws is not None:
             await self._ws.close()
+            self._ws = None
             self.connected = False
         if self._recv_task is not None:
             self._recv_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._recv_task
+            self._recv_task = None
         await self.client.aclose()
 
     async def create_timer(self, duration: float) -> int:
