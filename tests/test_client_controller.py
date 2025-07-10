@@ -101,3 +101,8 @@ def test_cli_all_commands(start_server):
 def test_cli_suggestion(start_server):
     out = run_cli("creat")  # misspelled create
     assert "Did you mean 'create'" in out
+
+
+def test_tick_no_args_usage(start_server):
+    out = run_cli("tick")
+    assert "Usage: tick <seconds>" in out
