@@ -7,6 +7,7 @@ import asyncio
 import contextlib
 import os
 import sys
+import os
 from pathlib import Path
 from typing import List
 
@@ -154,7 +155,9 @@ class ClientViewLayer:
                 await task
                 await tick_task
         await self.service.close()
+
         os.system("cls" if os.name == "nt" else "clear")
+
 
     def _current_id(self) -> str | None:
         if not self.service.state:
