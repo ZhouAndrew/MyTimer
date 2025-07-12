@@ -62,15 +62,27 @@ def run_install() -> None:
 
 
 def run_tests() -> None:
-    """Run the project's test suite with coverage."""
-    subprocess.check_call(
-        [
-            "pytest",
-            "--cov=mytimer",
-            "--cov=tools",
-            "-q",
-        ]
-    )
+    """Run the project's test suite with coverage.
+
+    If ``pytest-cov`` is not installed, fall back to running ``pytest``
+    without coverage options so ``python tools/manage.py test`` still
+    works on minimal environments.
+    """
+
+    use_cov = os.environ.get("MYTIMER_COV") == "1"
+    if use_cov:
+        cmd = ["pytest", "--cov=mytimer", "--cov=tools", "-q"]
+        env = os.environ.copy()
+        env.pop("COVERAGE_PROCESS_START", None)
+    else:
+        cmd = ["pytest", "-q"]
+        env = None
+
+    result = subprocess.run(cmd, capture_output=True, env=env)
+    if result.returncode != 0:
+        sys.stderr.write(result.stderr.decode())
+        raise subprocess.CalledProcessError(result.returncode, cmd)
+    sys.stdout.write(result.stdout.decode())
 
 
 def run_update() -> None:
