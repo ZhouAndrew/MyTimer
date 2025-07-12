@@ -2,9 +2,9 @@
 
 **‼️ NOTE: This is the actual, authoritative plan and requirement for the program.**  
 The document may contain inconsistencies, as it is derived from this plan.  
-📌 Refer to `todo/todo{n}.md` for the most up-to-date and accurate tasks.
+📌 Refer to `task/task{n}.md` for the most up-to-date and accurate tasks.
 
-> 🚧 当前文档仅供参考，真实计划与需求以 `todo/todo{n}.md`与`README.md`中为准。请开发和实现过程中优先参考代码任务。非管理员不得修改`README.md`
+> 🚧 当前文档仅供参考，真实计划与需求以 `task/task{n}.md`与`README.md`中为准。请开发和实现过程中优先参考代码任务。非管理员不得修改`README.md`
 
 
 [项目进度](ROADMAP.md) | [Project Progress 中文版](ROADMAP.zh.md) | [详细教程](TUTORIAL.md)
