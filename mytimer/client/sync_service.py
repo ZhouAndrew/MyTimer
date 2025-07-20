@@ -153,6 +153,18 @@ class SyncService:
         resp = await self.client.delete(f"/timers/{timer_id}")
         resp.raise_for_status()
 
+    async def remove_all_timers(self) -> None:
+        resp = await self.client.delete("/timers")
+        resp.raise_for_status()
+
+    async def pause_all(self) -> None:
+        resp = await self.client.post("/timers/pause_all")
+        resp.raise_for_status()
+
+    async def resume_all(self) -> None:
+        resp = await self.client.post("/timers/resume_all")
+        resp.raise_for_status()
+
     async def tick(self, seconds: float) -> None:
         resp = await self.client.post("/tick", params={"seconds": seconds})
         resp.raise_for_status()

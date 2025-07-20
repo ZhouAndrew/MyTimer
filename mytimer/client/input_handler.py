@@ -74,20 +74,17 @@ async def _get_timers(service: "SyncService") -> dict[str, Any]:
 
 
 async def pause_all_timers(service: "SyncService") -> None:
-    for tid in (await _get_timers(service)).keys():
-        await service.pause_timer(int(tid))
+    await service.pause_all()
     print("paused all")
 
 
 async def resume_all_timers(service: "SyncService") -> None:
-    for tid in (await _get_timers(service)).keys():
-        await service.resume_timer(int(tid))
+    await service.resume_all()
     print("resumed all")
 
 
 async def remove_all_timers(service: "SyncService") -> None:
-    for tid in list((await _get_timers(service)).keys()):
-        await service.remove_timer(int(tid))
+    await service.remove_all_timers()
     print("removed all")
 
 

@@ -98,6 +98,15 @@ def test_pause_all_and_reset_all():
         assert t['remaining'] == t['duration']
         assert t['running'] and not t['finished']
 
+    resp = client.post('/timers/resume_all')
+    assert resp.status_code == 200
+    resumed = client.get('/timers').json()
+    assert all(t['running'] for t in resumed.values())
+
+    resp = client.delete('/timers')
+    assert resp.status_code == 200
+    assert client.get('/timers').json() == {}
+
 
 def test_server_status():
     client.post('/timers', params={'duration': 5})
