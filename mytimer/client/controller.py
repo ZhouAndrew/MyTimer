@@ -75,20 +75,17 @@ def _get_timers(base_url: str) -> dict[str, Any]:
 
 
 def pause_all_timers(base_url: str) -> None:
-    for tid in _get_timers(base_url).keys():
-        requests.post(f"{base_url}/timers/{tid}/pause", timeout=5).raise_for_status()
+    requests.post(f"{base_url}/timers/pause_all", timeout=5).raise_for_status()
     print("paused all")
 
 
 def resume_all_timers(base_url: str) -> None:
-    for tid in _get_timers(base_url).keys():
-        requests.post(f"{base_url}/timers/{tid}/resume", timeout=5).raise_for_status()
+    requests.post(f"{base_url}/timers/resume_all", timeout=5).raise_for_status()
     print("resumed all")
 
 
 def remove_all_timers(base_url: str) -> None:
-    for tid in list(_get_timers(base_url).keys()):
-        requests.delete(f"{base_url}/timers/{tid}", timeout=5).raise_for_status()
+    requests.delete(f"{base_url}/timers", timeout=5).raise_for_status()
     print("removed all")
 
 

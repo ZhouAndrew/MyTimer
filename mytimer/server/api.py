@@ -132,12 +132,28 @@ async def remove_timer(timer_id: int):
     return JSONResponse(status_code=200, content={"status": "removed"})
 
 
+@app.delete("/timers")
+async def remove_all_timers():
+    """Delete all timers managed by the server."""
+    manager.remove_all()
+    await broadcast_state()
+    return {"status": "all_removed"}
+
+
 @app.post("/timers/pause_all")
 async def pause_all_timers():
     """Pause all running timers."""
     manager.pause_all()
     await broadcast_state()
     return {"status": "all_paused"}
+
+
+@app.post("/timers/resume_all")
+async def resume_all_timers():
+    """Resume all paused timers."""
+    manager.resume_all()
+    await broadcast_state()
+    return {"status": "all_resumed"}
 
 
 @app.post("/timers/reset_all")
