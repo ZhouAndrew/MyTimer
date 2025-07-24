@@ -35,4 +35,3 @@
 - [x] Add support for automatic ringing when the timer completes (CLI and TUI).
 - [x] Allow users to configure sound effects or use terminal bell for alerts.
 - [x] Enable system-wide notifications (e.g., using `notify-send` or `plyer`).
-
