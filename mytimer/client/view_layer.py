@@ -27,6 +27,8 @@ class ClientViewLayer:
     def __init__(self, service: SyncService) -> None:
         self.service = service
         self.selected_idx = 0
+        self.tags: dict[str, str] = {}
+        self._pending: set[str] = set()
         
     def _build_table(self) -> Table:
         table = Table(title="Timer Dashboard")
@@ -42,9 +44,10 @@ class ClientViewLayer:
             else:
                 status = "running" if timer.running else "paused"
             style = "reverse" if index == self.selected_idx else ""
+            tag = self.tags.get(str(tid), f"Timer {tid}")
             table.add_row(
                 str(tid),
-                f"Timer {tid}",
+                tag,
                 f"{timer.duration}",
                 f"{timer.remaining}",
                 status,
@@ -68,7 +71,7 @@ class ClientViewLayer:
             style="cyan",
         )
         hints = Text(
-            "j/down: next  k/up: prev  p: pause  r: resume  d: delete  q: quit",
+            "j/down: next  k/up: prev  c: create  s: start  p: pause  r: resume  d: delete  q: quit",
             style="green",
         )
         return Panel(
@@ -118,6 +121,24 @@ class ClientViewLayer:
                 elif cmd in {"k", "up"}:
                     if self.service.state:
                         self.selected_idx = (self.selected_idx - 1) % len(self.service.state)
+                elif cmd == "c":
+                    console.print("Duration? ", end="", style="yellow")
+                    dur = await loop.run_in_executor(None, sys.stdin.readline)
+                    try:
+                        duration = float(dur.strip())
+                    except ValueError:
+                        continue
+                    console.print("Tag (optional)? ", end="", style="yellow")
+                    tag = await loop.run_in_executor(None, sys.stdin.readline)
+                    timer_id = await self.service.create_timer(duration)
+                    await self.service.pause_timer(timer_id)
+                    self.tags[str(timer_id)] = tag.strip() or f"Timer {timer_id}"
+                    self._pending.add(str(timer_id))
+                elif cmd == "s":
+                    tid = self._current_id()
+                    if tid is not None:
+                        await self.service.resume_timer(int(tid))
+                        self._pending.discard(str(tid))
                 elif cmd == "p":
                     tid = self._current_id()
                     if tid is not None:
@@ -129,7 +150,12 @@ class ClientViewLayer:
                 elif cmd == "d":
                     tid = self._current_id()
                     if tid is not None:
-                        await self.service.remove_timer(int(tid))
+                        console.print(f"Delete timer {tid}? [y/N] ", end="", style="yellow")
+                        ans = await loop.run_in_executor(None, sys.stdin.readline)
+                        if ans.strip().lower() == "y":
+                            await self.service.remove_timer(int(tid))
+                            self.tags.pop(str(tid), None)
+                            self._pending.discard(str(tid))
 
         async def tick_loop() -> None:
             nonlocal running

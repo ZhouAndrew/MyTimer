@@ -60,7 +60,7 @@ def test_tui_app_interactive(start_server):
         text=True,
     )
     time.sleep(1)
-    cmds = "p\n" "r\n" "d\n" "q\n"
+    cmds = "p\n" "r\n" "d\n" "y\n" "q\n"
     stdout, stderr = proc.communicate(cmds, timeout=10)
     assert proc.returncode == 0
     data = requests.get("http://127.0.0.1:8004/timers", timeout=5).json()
