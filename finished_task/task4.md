@@ -1,4 +1,7 @@
-### **Complete To-Do List for Codex:**
+# ✅ Complete To-Do List for Codex (Task 4)
+
+### 进度
+所有任务均已在仓库代码中实现，以下清单仅供参考。
 
 #### **1. Server-side Tasks:**
 - [x] Implement WebSocket notification system for real-time updates.
@@ -32,3 +35,4 @@
 - [x] Add support for automatic ringing when the timer completes (CLI and TUI).
 - [x] Allow users to configure sound effects or use terminal bell for alerts.
 - [x] Enable system-wide notifications (e.g., using `notify-send` or `plyer`).
+
