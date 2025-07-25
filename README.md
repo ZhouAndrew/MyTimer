@@ -166,6 +166,11 @@ python -m tools.server_discovery
 
 脚本会在 3 秒内等待服务器响应，并打印发现的服务器 IP 地址；若未发现则输出 `No server found`。
 
+## 📴 Local Mode
+
+TUI 启动时若无法连接服务器，将自动进入本地模式，所有计时器状态会保存在
+`~/.timercli/timers.json` 中。重新连上服务器后可手动同步。
+
 `tools/test_discovery.py` 演示了如何在代码中启动模拟服务器并调用发现函数，可用于简单的功能测试。
 
 ## 📖 代码结构说明

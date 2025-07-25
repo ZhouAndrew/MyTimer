@@ -54,6 +54,8 @@ async def broadcast_state() -> None:
             "remaining": timer.remaining,
             "running": timer.running,
             "finished": timer.finished,
+            "created_at": timer.created_at,
+            "start_at": timer.start_at,
         }
         for timer_id, timer in manager.timers.items()
     }
@@ -72,6 +74,8 @@ async def broadcast_update(timer_id: int) -> None:
             "remaining": timer.remaining,
             "running": timer.running,
             "finished": timer.finished,
+            "created_at": timer.created_at,
+            "start_at": timer.start_at,
         }
     )
 
@@ -97,6 +101,8 @@ async def list_timers():
             "remaining": timer.remaining,
             "running": timer.running,
             "finished": timer.finished,
+            "created_at": timer.created_at,
+            "start_at": timer.start_at,
         }
         for timer_id, timer in manager.timers.items()
     }
@@ -189,7 +195,7 @@ async def websocket_endpoint(ws: WebSocket):
     await ws_manager.connect(ws)
     # send current timer state immediately after connection if any timers exist
     if manager.timers:
-        await ws_manager.send_json(
+            await ws_manager.send_json(
             ws,
             {
                 timer_id: {
@@ -197,6 +203,8 @@ async def websocket_endpoint(ws: WebSocket):
                     "remaining": timer.remaining,
                     "running": timer.running,
                     "finished": timer.finished,
+                    "created_at": timer.created_at,
+                    "start_at": timer.start_at,
                 }
                 for timer_id, timer in manager.timers.items()
             },

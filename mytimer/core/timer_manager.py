@@ -2,28 +2,34 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Callable, Awaitable, List
 import asyncio
 import contextlib
 import json
+import time
 from pathlib import Path
 
 
 @dataclass
 class Timer:
-    """Simple countdown timer."""
+    """Simple countdown timer using timestamp-based progress."""
 
     duration: float
     remaining: float
     running: bool = True
     finished: bool = False
+    created_at: float = field(default_factory=time.time)
+    start_at: float | None = field(default_factory=time.time)
 
     def __post_init__(self) -> None:
         if self.duration <= 0:
             self.remaining = 0
             self.running = False
             self.finished = True
+            self.start_at = None
+        elif not self.running:
+            self.start_at = None
 
     def tick(self, seconds: float) -> None:
         """Advance the timer by ``seconds`` if running.
@@ -38,11 +44,13 @@ class Timer:
 
         if self.running and not self.finished:
             self.remaining -= seconds
+            if self.start_at is not None:
+                self.start_at -= seconds
             if self.remaining <= 0:
                 self.remaining = 0
                 self.finished = True
                 self.running = False
-
+                
 
 class TimerManager:
     """Manage multiple :class:`Timer` instances."""
@@ -75,10 +83,23 @@ class TimerManager:
         timer_id = self._next_id
         self._next_id += 1
 
+        now = time.time()
         if duration <= 0:
-            timer = Timer(duration=duration, remaining=0, running=False, finished=True)
+            timer = Timer(
+                duration=duration,
+                remaining=0,
+                running=False,
+                finished=True,
+                created_at=now,
+                start_at=None,
+            )
         else:
-            timer = Timer(duration=duration, remaining=duration)
+            timer = Timer(
+                duration=duration,
+                remaining=duration,
+                created_at=now,
+                start_at=now,
+            )
 
         self.timers[timer_id] = timer
         return timer_id
@@ -106,11 +127,14 @@ class TimerManager:
         timer = self.timers.get(timer_id)
         if timer and not timer.finished:
             timer.running = False
+            timer.start_at = None
 
     def resume_timer(self, timer_id: int) -> None:
         """Resume a paused timer."""
         timer = self.timers.get(timer_id)
         if timer and not timer.finished:
+            if not timer.running:
+                timer.start_at = time.time() - (timer.duration - timer.remaining)
             timer.running = True
 
     def remove_timer(self, timer_id: int) -> None:
@@ -122,6 +146,18 @@ class TimerManager:
         for timer in self.timers.values():
             if not timer.finished:
                 timer.running = False
+
+    def resume_all(self) -> None:
+        """Resume all non-finished timers."""
+        for timer in self.timers.values():
+            if not timer.finished:
+                if not timer.running:
+                    timer.start_at = time.time() - (timer.duration - timer.remaining)
+                timer.running = True
+
+    def remove_all(self) -> None:
+        """Remove all timers from the manager."""
+        self.timers.clear()
 
     def reset_all(self) -> None:
         """Reset all timers to their initial duration and resume them."""
@@ -153,27 +189,8 @@ class TimerManager:
             timer.remaining = timer.duration
             timer.running = True
             timer.finished = False
+            timer.start_at = time.time()
 
-    def pause_all(self) -> None:
-        """Pause all running timers."""
-        for timer in self.timers.values():
-            if not timer.finished:
-                timer.running = False
-
-    def resume_all(self) -> None:
-        """Resume all non-finished timers."""
-        for timer in self.timers.values():
-            if not timer.finished:
-                timer.running = True
-
-    def remove_all(self) -> None:
-        """Remove all timers from the manager."""
-        self.timers.clear()
-
-    def reset_all(self) -> None:
-        """Reset every timer to its initial state."""
-        for tid in list(self.timers.keys()):
-            self.reset_timer(tid)
 
     def save_state(self, path: str | Path) -> None:
         """Persist current timers to a JSON file."""
@@ -186,6 +203,8 @@ class TimerManager:
                     "remaining": t.remaining,
                     "running": t.running,
                     "finished": t.finished,
+                    "created_at": t.created_at,
+                    "start_at": t.start_at,
                 }
                 for tid, t in self.timers.items()
             },
@@ -213,6 +232,8 @@ class TimerManager:
                 remaining=tdata.get("remaining", 0),
                 running=tdata.get("running", True),
                 finished=tdata.get("finished", False),
+                created_at=tdata.get("created_at", time.time()),
+                start_at=tdata.get("start_at"),
             )
             self.timers[tid] = timer
         self._next_id = data.get("next_id", max(self.timers.keys(), default=0) + 1)

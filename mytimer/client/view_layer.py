@@ -46,7 +46,7 @@ class ClientViewLayer:
                 str(tid),
                 f"Timer {tid}",
                 f"{timer.duration}",
-                f"{timer.remaining}",
+                f"{timer.remaining_now():.1f}",
                 status,
                 style=style,
             )
@@ -64,7 +64,7 @@ class ClientViewLayer:
         title = f"Running: {running}  Paused: {paused}  Finished: {finished}"
         header = Text(
             f"Server: {self.service.base_url} "
-            f"({'connected' if self.service.connected else 'disconnected'})",
+            f"({'connected' if self.service.connected else 'local'})",
             style="cyan",
         )
         hints = Text(
