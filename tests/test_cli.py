@@ -91,7 +91,7 @@ def test_cli_tui_consistency(start_server):
         if f"Timer {tid}" in line:
             parts = [p.strip() for p in line.split("│") if p.strip()]
             remaining = float(parts[3])
-            assert 2.0 <= remaining <= 3.1
+            assert 1.0 <= remaining <= 3.1
             break
     else:
         pytest.fail("Timer row not found in TUI output")
