@@ -193,3 +193,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 httpie_config/
+server.pid
+.vscode/*
