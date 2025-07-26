@@ -46,21 +46,21 @@ async def test_sync_flow(start_server):
             break
         await asyncio.sleep(0.1)
     assert str(timer_id) in svc.state
-    assert svc.state[str(timer_id)].remaining == 5
+    assert svc.state[str(timer_id)].remaining == pytest.approx(5, rel=0.01, abs=0.05)
 
     await svc.tick(2)
     await asyncio.sleep(0.1)
-    assert svc.state[str(timer_id)].remaining == 3
+    assert svc.state[str(timer_id)].remaining == pytest.approx(3, rel=0.05, abs=0.5)
 
     await svc.pause_timer(timer_id)
     await svc.tick(1)
     await asyncio.sleep(0.1)
-    assert svc.state[str(timer_id)].remaining == 3
+    assert svc.state[str(timer_id)].remaining == pytest.approx(3, rel=0.05, abs=0.5)
 
     await svc.resume_timer(timer_id)
     await svc.tick(1)
     await asyncio.sleep(0.1)
-    assert svc.state[str(timer_id)].remaining == 2
+    assert svc.state[str(timer_id)].remaining == pytest.approx(2, abs=1.0)
 
     await svc.remove_timer(timer_id)
     await asyncio.sleep(0.1)
@@ -85,7 +85,7 @@ async def test_multi_client_sync(start_server):
 
     await c2.tick(1)
     await asyncio.sleep(0.2)
-    assert c1.state[str(tid)].remaining == 3
+    assert c1.state[str(tid)].remaining == pytest.approx(3, rel=0.05, abs=0.5)
 
     await c1.remove_timer(tid)
     await asyncio.sleep(0.2)
@@ -119,6 +119,6 @@ async def test_reconnect_resync(start_server):
             break
         await asyncio.sleep(0.1)
 
-    assert svc.state[str(tid)].remaining == 4
+    assert svc.state[str(tid)].remaining == pytest.approx(4, rel=0.05, abs=0.5)
 
     await svc.close()

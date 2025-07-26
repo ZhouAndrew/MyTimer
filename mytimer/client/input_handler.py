@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import json
 import sys
+import time
 from typing import Optional, Any, List
 from pathlib import Path
 import difflib
@@ -57,9 +58,8 @@ async def _ring_if_needed(service: "SyncService") -> None:
     if not settings.notifications_enabled or not sys.stdout.isatty():
         return
     try:
-        resp = await service.client.get("/timers")
-        resp.raise_for_status()
-        for t in resp.json().values():
+        data = await _get_timers(service)
+        for t in data.values():
             if t.get("finished"):
                 ring(settings.notify_sound, settings.volume, settings.mute)
                 break
@@ -70,7 +70,18 @@ async def _ring_if_needed(service: "SyncService") -> None:
 async def _get_timers(service: "SyncService") -> dict[str, Any]:
     resp = await service.client.get("/timers")
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+    now = time.time()
+    for t in data.values():
+        start = t.get("start_at")
+        if start is not None:
+            remaining = max(0.0, t["duration"] - (now - start))
+            t["remaining"] = remaining
+            t["finished"] = remaining <= 0
+        else:
+            t.setdefault("remaining", t.get("duration", 0))
+            t.setdefault("finished", False)
+    return data
 
 
 async def pause_all_timers(service: "SyncService") -> None:
@@ -132,9 +143,8 @@ class InputHandler:
                 timer_id = await self.service.create_timer(float(args[0]))
                 print(timer_id)
             elif cmd == "list" and len(args) == 0:
-                resp = await self.service.client.get("/timers")
-                resp.raise_for_status()
-                print(json.dumps(resp.json()))
+                data = await _get_timers(self.service)
+                print(json.dumps(data))
             elif cmd == "pause" and len(args) == 1 and args[0] == "all":
                 await pause_all_timers(self.service)
             elif cmd == "resume" and len(args) == 1 and args[0] == "all":

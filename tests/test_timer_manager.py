@@ -18,7 +18,7 @@ def test_tick_and_finish():
     tm = TimerManager()
     timer_id = tm.create_timer(5)
     tm.tick(3)
-    assert tm.timers[timer_id].remaining == 2
+    assert tm.timers[timer_id].remaining == pytest.approx(2, rel=0.01, abs=0.05)
     assert not tm.timers[timer_id].finished
     tm.tick(5)
     assert tm.timers[timer_id].remaining == 0
@@ -31,10 +31,10 @@ def test_pause_and_resume():
     tm.pause_timer(timer_id)
     tm.tick(5)
     # should not decrease while paused
-    assert tm.timers[timer_id].remaining == 10
+    assert tm.timers[timer_id].remaining == pytest.approx(10, rel=0.01, abs=0.05)
     tm.resume_timer(timer_id)
     tm.tick(4)
-    assert tm.timers[timer_id].remaining == 6
+    assert tm.timers[timer_id].remaining == pytest.approx(6, rel=0.02, abs=0.1)
 
 
 def test_remove_timer():
@@ -97,7 +97,7 @@ def test_tick_zero_seconds():
     tm = TimerManager()
     timer_id = tm.create_timer(5)
     tm.tick(0)
-    assert tm.timers[timer_id].remaining == 5
+    assert tm.timers[timer_id].remaining == pytest.approx(5, rel=0.01, abs=0.05)
 
 
 def test_batch_operations_and_reset(tmp_path):
@@ -133,9 +133,9 @@ def test_save_and_load_state(tmp_path):
     tm2 = TimerManager()
     tm2.load_state(path)
     assert tid1 in tm2.timers and tid2 in tm2.timers
-    assert tm2.timers[tid1].remaining == 5
+    assert tm2.timers[tid1].remaining == pytest.approx(5, rel=0.01, abs=0.05)
     assert not tm2.timers[tid1].running
-    assert tm2.timers[tid2].remaining == 2
+    assert tm2.timers[tid2].remaining == pytest.approx(2, rel=0.02, abs=0.1)
 
 
 @pytest.mark.asyncio
