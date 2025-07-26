@@ -7,11 +7,11 @@ Ensure TUI timer creation works fully and switch the timer system to timestamp-b
 
 ## Part 1: Fix TUI Timer Creation
 
-- [ ] In `view_layer.py`, ensure `[c]` keybinding opens an input prompt (via `Prompt.ask` or similar).
-- [ ] Prompt for at least `duration` (in seconds) and optionally `tag`.
-- [ ] Send a POST request to the server's timer creation API (`/timers` or equivalent).
-- [ ] Refresh the view to show the new timer immediately.
-- [ ] Confirm timer appears and starts ticking when `start_at` is set.
+- [x] In `view_layer.py`, ensure `[c]` keybinding opens an input prompt (via `Prompt.ask` or similar).
+- [x] Prompt for at least `duration` (in seconds) and optionally `tag`.
+- [x] Send a POST request to the server's timer creation API (`/timers` or equivalent).
+- [x] Refresh the view to show the new timer immediately.
+- [x] Confirm timer appears and starts ticking when `start_at` is set.
 
 ---
 

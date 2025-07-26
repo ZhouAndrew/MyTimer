@@ -16,6 +16,7 @@ from rich.live import Live
 from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
+from rich.prompt import Prompt
 
 from client_settings import ClientSettings
 from .sync_service import SyncService, TimerState
@@ -122,14 +123,16 @@ class ClientViewLayer:
                     if self.service.state:
                         self.selected_idx = (self.selected_idx - 1) % len(self.service.state)
                 elif cmd == "c":
-                    console.print("Duration? ", end="", style="yellow")
-                    dur = await loop.run_in_executor(None, sys.stdin.readline)
+                    dur = await loop.run_in_executor(
+                        None, lambda: Prompt.ask("Duration (seconds)")
+                    )
                     try:
                         duration = float(dur.strip())
                     except ValueError:
                         continue
-                    console.print("Tag (optional)? ", end="", style="yellow")
-                    tag = await loop.run_in_executor(None, sys.stdin.readline)
+                    tag = await loop.run_in_executor(
+                        None, lambda: Prompt.ask("Tag (optional)", default="")
+                    )
                     timer_id = await self.service.create_timer(duration)
                     await self.service.pause_timer(timer_id)
                     self.tags[str(timer_id)] = tag.strip() or f"Timer {timer_id}"

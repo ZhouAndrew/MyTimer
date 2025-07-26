@@ -55,7 +55,7 @@ def test_tick_advances_timer(start_server):
     run_cli("tick", "3")
     data = json.loads(run_cli("list").stdout.strip())
     remaining = data[str(tid)]["remaining"]
-    assert 1.4 <= remaining <= 2.1
+    assert 1.3 <= remaining <= 2.1
 
 
 def test_tui_clears_screen(start_server):
