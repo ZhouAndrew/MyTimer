@@ -31,25 +31,24 @@ class Timer:
         elif not self.running:
             self.start_at = None
 
-    def tick(self, seconds: float) -> None:
-        """Advance the timer by ``seconds`` if running.
+    def remaining_now(self) -> float:
+        """Return the remaining time based on ``start_at`` if running."""
+        if self.running and self.start_at is not None:
+            return max(0.0, self.duration - (time.time() - self.start_at))
+        return self.remaining
 
-        Raises
-        ------
-        ValueError
-            If ``seconds`` is negative.
-        """
+    def tick(self, seconds: float) -> None:
+        """Simulate elapsing ``seconds`` of time for compatibility."""
         if seconds < 0:
             raise ValueError("seconds must be non-negative")
-
-        if self.running and not self.finished:
-            self.remaining -= seconds
-            if self.start_at is not None:
-                self.start_at -= seconds
-            if self.remaining <= 0:
-                self.remaining = 0
-                self.finished = True
-                self.running = False
+        if self.running and not self.finished and self.start_at is not None:
+            self.start_at -= seconds
+            self.remaining = self.remaining_now()
+        if self.running and self.remaining_now() <= 0:
+            self.remaining = 0
+            self.finished = True
+            self.running = False
+            self.start_at = None
                 
 
 class TimerManager:
@@ -126,6 +125,7 @@ class TimerManager:
         """Pause the specified timer."""
         timer = self.timers.get(timer_id)
         if timer and not timer.finished:
+            timer.remaining = timer.remaining_now()
             timer.running = False
             timer.start_at = None
 
@@ -145,8 +145,9 @@ class TimerManager:
         """Pause all running timers."""
         for timer in self.timers.values():
             if not timer.finished:
+                timer.remaining = timer.remaining_now()
                 timer.running = False
-
+                
     def resume_all(self) -> None:
         """Resume all non-finished timers."""
         for timer in self.timers.values():
@@ -165,6 +166,7 @@ class TimerManager:
             timer.remaining = timer.duration
             timer.running = True
             timer.finished = False
+            timer.start_at = time.time()
 
     def running_count(self) -> int:
         """Return the number of running timers."""

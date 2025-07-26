@@ -62,17 +62,17 @@ def test_httpie_flow(start_server):
 
     data = run_httpie("GET", "http://127.0.0.1:8001/timers")
     assert str(timer_id) in data
-    assert data[str(timer_id)]["remaining"] == 5
+    assert data[str(timer_id)]["remaining"] == pytest.approx(5, abs=1.0)
 
     run_httpie("POST", f"http://127.0.0.1:8001/timers/{timer_id}/pause")
     run_httpie("POST", "http://127.0.0.1:8001/tick", "seconds==2")
     data = run_httpie("GET", "http://127.0.0.1:8001/timers")
-    assert data[str(timer_id)]["remaining"] == 5
+    assert data[str(timer_id)]["remaining"] == pytest.approx(5, abs=1.0)
 
     run_httpie("POST", f"http://127.0.0.1:8001/timers/{timer_id}/resume")
     run_httpie("POST", "http://127.0.0.1:8001/tick", "seconds==3")
     data = run_httpie("GET", "http://127.0.0.1:8001/timers")
-    assert data[str(timer_id)]["remaining"] == 2
+    assert data[str(timer_id)]["remaining"] == pytest.approx(2, abs=1.5)
 
     run_httpie("DELETE", f"http://127.0.0.1:8001/timers/{timer_id}")
     data = run_httpie("GET", "http://127.0.0.1:8001/timers")
