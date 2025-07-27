@@ -51,8 +51,8 @@ async def test_two_clients_receive_updates(start_server):
         if svc1.state[str(tid)].remaining == 3 and svc2.state[str(tid)].remaining == 3:
             break
         await asyncio.sleep(0.1)
-    assert svc1.state[str(tid)].remaining == 3
-    assert svc2.state[str(tid)].remaining == 3
+    assert svc1.state[str(tid)].remaining == pytest.approx(3, rel=0.02, abs=0.1)
+    assert svc2.state[str(tid)].remaining == pytest.approx(3, rel=0.02, abs=0.1)
 
     await svc2.remove_timer(tid)
     for _ in range(20):

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from typing import Any, List
 from pathlib import Path
 import difflib
@@ -58,9 +59,7 @@ def _ring_if_needed(base_url: str) -> None:
     if not settings.notifications_enabled or not sys.stdout.isatty():
         return
     try:
-        resp = requests.get(f"{base_url}/timers", timeout=5)
-        resp.raise_for_status()
-        for t in resp.json().values():
+        for t in _get_timers(base_url).values():
             if t.get("finished"):
                 ring(settings.notify_sound, settings.volume, settings.mute)
                 break
@@ -71,7 +70,18 @@ def _ring_if_needed(base_url: str) -> None:
 def _get_timers(base_url: str) -> dict[str, Any]:
     resp = requests.get(f"{base_url}/timers", timeout=5)
     resp.raise_for_status()
-    return resp.json()
+    data = resp.json()
+    now = time.time()
+    for t in data.values():
+        start = t.get("start_at")
+        if start is not None:
+            remaining = max(0.0, t["duration"] - (now - start))
+            t["remaining"] = remaining
+            t["finished"] = remaining <= 0
+        else:
+            t.setdefault("remaining", t.get("duration", 0))
+            t.setdefault("finished", False)
+    return data
 
 
 def pause_all_timers(base_url: str) -> None:
@@ -122,9 +132,7 @@ def create_timer(base_url: str, duration: float) -> int:
 
 def list_timers(base_url: str) -> dict[str, Any]:
     """List all timers and print JSON to stdout."""
-    resp = requests.get(f"{base_url}/timers", timeout=5)
-    resp.raise_for_status()
-    data = resp.json()
+    data = _get_timers(base_url)
     print(json.dumps(data))
     return data
 

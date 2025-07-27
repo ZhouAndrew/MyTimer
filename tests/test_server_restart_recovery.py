@@ -53,7 +53,8 @@ def test_restart_recovers_state(tmp_path):
     try:
         resp = requests.get(f"http://127.0.0.1:{port}/timers", timeout=5)
         data = resp.json()
-        assert "1" in data and data["1"]["remaining"] == 3
+        assert "1" in data
+        assert 0 < data["1"]["remaining"] <= 3
     finally:
         proc.terminate()
         proc.wait()

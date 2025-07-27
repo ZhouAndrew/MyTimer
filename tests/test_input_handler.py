@@ -58,7 +58,7 @@ def test_input_handler_flow(start_server):
     timer_id = int(lines[0])
     state = json.loads(lines[5])  # after "list" command output (6th output)
     assert str(timer_id) in state
-    assert state[str(timer_id)]["remaining"] == 3
+    assert state[str(timer_id)]["remaining"] == pytest.approx(3, rel=0.02, abs=0.1)
     data = requests.get("http://127.0.0.1:8004/timers", timeout=5).json()
     assert str(timer_id) not in data
 

@@ -51,9 +51,9 @@ async def broadcast_state() -> None:
     data = {
         timer_id: {
             "duration": timer.duration,
-            "remaining": timer.remaining,
+            "remaining": timer.remaining_now(),
             "running": timer.running,
-            "finished": timer.finished,
+            "finished": timer.finished or timer.remaining_now() <= 0,
             "created_at": timer.created_at,
             "start_at": timer.start_at,
         }
@@ -71,9 +71,9 @@ async def broadcast_update(timer_id: int) -> None:
             "type": "update",
             "timer_id": str(timer_id),
             "duration": timer.duration,
-            "remaining": timer.remaining,
+            "remaining": timer.remaining_now(),
             "running": timer.running,
-            "finished": timer.finished,
+            "finished": timer.finished or timer.remaining_now() <= 0,
             "created_at": timer.created_at,
             "start_at": timer.start_at,
         }
@@ -98,9 +98,9 @@ async def list_timers():
     return {
         timer_id: {
             "duration": timer.duration,
-            "remaining": timer.remaining,
+            "remaining": timer.remaining_now(),
             "running": timer.running,
-            "finished": timer.finished,
+            "finished": timer.finished or timer.remaining_now() <= 0,
             "created_at": timer.created_at,
             "start_at": timer.start_at,
         }

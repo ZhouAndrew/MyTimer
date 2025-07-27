@@ -1,5 +1,6 @@
 import os
 import sys
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -26,7 +27,7 @@ def test_create_and_list_timers():
     data = resp.json()
     assert str(timer_id) in data or timer_id in data
     tid = timer_id if timer_id in data else str(timer_id)
-    assert data[tid]['remaining'] == 5
+    assert data[tid]['remaining'] == pytest.approx(5, rel=0.01, abs=0.05)
 
 
 def test_pause_resume_tick_remove():
@@ -37,13 +38,13 @@ def test_pause_resume_tick_remove():
     # remaining should stay 10 because paused
     data = client.get('/timers').json()
     tid = timer_id if timer_id in data else str(timer_id)
-    assert data[tid]['remaining'] == 10
+    assert data[tid]['remaining'] == pytest.approx(10, rel=0.01, abs=0.05)
 
     client.post(f'/timers/{timer_id}/resume')
     client.post('/tick', params={'seconds': 3})
     data = client.get('/timers').json()
     tid = timer_id if timer_id in data else str(timer_id)
-    assert data[tid]['remaining'] == 7
+    assert data[tid]['remaining'] == pytest.approx(7, rel=0.01, abs=0.05)
 
     client.delete(f'/timers/{timer_id}')
     data = client.get('/timers').json()
@@ -58,7 +59,7 @@ def test_websocket_receives_updates():
         client.post('/tick', params={'seconds': 1})
         message = ws.receive_json()
         tid = str(timer_id)
-        assert message[tid]['remaining'] == 2
+        assert message[tid]['remaining'] == pytest.approx(2, rel=0.01, abs=0.05)
 
 
 def test_create_timer_invalid_duration():
@@ -89,13 +90,13 @@ def test_pause_all_and_reset_all():
     client.post('/tick', params={'seconds': 2})
     data_after_tick = client.get('/timers').json()
     for tid, t in data.items():
-        assert data_after_tick[tid]['remaining'] == t['remaining']
+        assert data_after_tick[tid]['remaining'] == pytest.approx(t['remaining'], rel=0.01, abs=0.05)
 
     resp = client.post('/timers/reset_all')
     assert resp.status_code == 200
     reset = client.get('/timers').json()
     for t in reset.values():
-        assert t['remaining'] == t['duration']
+        assert t['remaining'] == pytest.approx(t['duration'], rel=0.01, abs=0.05)
         assert t['running'] and not t['finished']
 
     resp = client.post('/timers/resume_all')
