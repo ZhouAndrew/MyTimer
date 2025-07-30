@@ -70,18 +70,7 @@ async def _ring_if_needed(service: "SyncService") -> None:
 async def _get_timers(service: "SyncService") -> dict[str, Any]:
     resp = await service.client.get("/timers")
     resp.raise_for_status()
-    data = resp.json()
-    now = time.time()
-    for t in data.values():
-        start = t.get("start_at")
-        if start is not None:
-            remaining = max(0.0, t["duration"] - (now - start))
-            t["remaining"] = remaining
-            t["finished"] = remaining <= 0
-        else:
-            t.setdefault("remaining", t.get("duration", 0))
-            t.setdefault("finished", False)
-    return data
+    return resp.json()
 
 
 async def pause_all_timers(service: "SyncService") -> None:
