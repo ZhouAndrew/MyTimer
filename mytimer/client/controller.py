@@ -56,12 +56,20 @@ def _load_settings() -> ClientSettings:
 
 def _ring_if_needed(base_url: str) -> None:
     settings = _load_settings()
-    if not settings.notifications_enabled or not sys.stdout.isatty():
+    if (
+        not settings.notifications_enabled
+        or not sys.stdout.isatty()
+        or settings.mute
+        or settings.volume <= 0
+    ):
         return
     try:
         for t in _get_timers(base_url).values():
             if t.get("finished"):
-                ring(settings.notify_sound, settings.volume, settings.mute)
+                try:
+                    requests.post("http://127.0.0.1:8800/ring", timeout=0.1)
+                except Exception:
+                    ring(settings.notify_sound, settings.volume, settings.mute)
                 break
     except requests.RequestException:
         pass

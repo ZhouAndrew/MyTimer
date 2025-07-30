@@ -54,13 +54,21 @@ def test_ring_if_needed(monkeypatch, tmp_path, start_server):
         config_dir / "settings.json",
     )
 
-    called = []
-    def fake_ring(sound, volume, mute):
-        called.append((sound, volume, mute))
-    monkeypatch.setattr("mytimer.client.controller.ring", fake_ring)
-
     requests.post("http://127.0.0.1:8005/timers", params={"duration": 1}, timeout=5)
     requests.post("http://127.0.0.1:8005/tick", params={"seconds": 1}, timeout=5)
 
+    called = []
+    def fake_post(url, *args, **kwargs):
+        called.append(url)
+        class Resp:
+            def raise_for_status(self):
+                pass
+        return Resp()
+    monkeypatch.setattr(
+        __import__("mytimer.client.controller", fromlist=["requests"]).requests,
+        "post",
+        fake_post,
+    )
+
     _ring_if_needed("http://127.0.0.1:8005")
-    assert called == [("default", 0.8, False)]
+    assert called == ["http://127.0.0.1:8800/ring"]

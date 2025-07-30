@@ -17,6 +17,7 @@ except Exception:  # pragma: no cover - platform without readline
 
 from client_settings import ClientSettings
 from .ringer import ring
+import httpx
 
 HELP_TEXT = """\
 Available commands:
@@ -55,13 +56,22 @@ def _load_settings() -> ClientSettings:
 
 async def _ring_if_needed(service: "SyncService") -> None:
     settings = _load_settings()
-    if not settings.notifications_enabled or not sys.stdout.isatty():
+    if (
+        not settings.notifications_enabled
+        or not sys.stdout.isatty()
+        or settings.mute
+        or settings.volume <= 0
+    ):
         return
     try:
         data = await _get_timers(service)
         for t in data.values():
             if t.get("finished"):
-                ring(settings.notify_sound, settings.volume, settings.mute)
+                try:
+                    async with httpx.AsyncClient(trust_env=False, timeout=0.1) as c:
+                        await c.post("http://127.0.0.1:8800/ring")
+                except Exception:
+                    ring(settings.notify_sound, settings.volume, settings.mute)
                 break
     except Exception:
         pass
