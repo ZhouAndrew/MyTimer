@@ -195,3 +195,4 @@ cython_debug/
 httpie_config/
 server.pid
 .vscode/*
+*.pid
