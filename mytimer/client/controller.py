@@ -56,12 +56,20 @@ def _load_settings() -> ClientSettings:
 
 def _ring_if_needed(base_url: str) -> None:
     settings = _load_settings()
-    if not settings.notifications_enabled or not sys.stdout.isatty():
+    if (
+        not settings.notifications_enabled
+        or not sys.stdout.isatty()
+        or settings.mute
+        or settings.volume <= 0
+    ):
         return
     try:
         for t in _get_timers(base_url).values():
             if t.get("finished"):
-                ring(settings.notify_sound, settings.volume, settings.mute)
+                try:
+                    requests.post("http://127.0.0.1:8800/ring", timeout=0.1)
+                except Exception:
+                    ring(settings.notify_sound, settings.volume, settings.mute)
                 break
     except requests.RequestException:
         pass
@@ -70,18 +78,7 @@ def _ring_if_needed(base_url: str) -> None:
 def _get_timers(base_url: str) -> dict[str, Any]:
     resp = requests.get(f"{base_url}/timers", timeout=5)
     resp.raise_for_status()
-    data = resp.json()
-    now = time.time()
-    for t in data.values():
-        start = t.get("start_at")
-        if start is not None:
-            remaining = max(0.0, t["duration"] - (now - start))
-            t["remaining"] = remaining
-            t["finished"] = remaining <= 0
-        else:
-            t.setdefault("remaining", t.get("duration", 0))
-            t.setdefault("finished", False)
-    return data
+    return resp.json()
 
 
 def pause_all_timers(base_url: str) -> None:

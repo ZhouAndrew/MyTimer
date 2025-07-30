@@ -52,7 +52,12 @@ class SyncService:
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.ws_url = self.base_url.replace("http", "ws", 1) + "/ws"
-        self.client = httpx.AsyncClient(base_url=self.base_url)
+        # httpx will read proxy settings from the environment by default.  Some
+        # users run the application in environments that set SOCKS proxies,
+        # which ``httpx`` does not understand without optional dependencies.
+        # To avoid startup failures like ``ValueError: Unknown scheme for proxy
+        # URL ...`` we disable usage of environment proxy variables.
+        self.client = httpx.AsyncClient(base_url=self.base_url, trust_env=False)
         self.state: Dict[str, TimerState] = {}
         self._ws: Optional[websockets.WebSocketClientProtocol] = None
         self._recv_task: Optional[asyncio.Task[None]] = None
