@@ -32,18 +32,15 @@ class Timer:
             self.start_at = None
 
     def remaining_now(self) -> float:
-        """Return the remaining time based on ``start_at`` if running."""
-        if self.running and self.start_at is not None:
-            return max(0.0, self.duration - (time.time() - self.start_at))
+        """Return the current remaining time."""
         return self.remaining
 
     def tick(self, seconds: float) -> None:
         """Simulate elapsing ``seconds`` of time for compatibility."""
         if seconds < 0:
             raise ValueError("seconds must be non-negative")
-        if self.running and not self.finished and self.start_at is not None:
-            self.start_at -= seconds
-            self.remaining = self.remaining_now()
+        if self.running and not self.finished:
+            self.remaining = max(0.0, self.remaining - seconds)
         if self.running and self.remaining_now() <= 0:
             self.remaining = 0
             self.finished = True
@@ -127,14 +124,11 @@ class TimerManager:
         if timer and not timer.finished:
             timer.remaining = timer.remaining_now()
             timer.running = False
-            timer.start_at = None
 
     def resume_timer(self, timer_id: int) -> None:
         """Resume a paused timer."""
         timer = self.timers.get(timer_id)
         if timer and not timer.finished:
-            if not timer.running:
-                timer.start_at = time.time() - (timer.duration - timer.remaining)
             timer.running = True
 
     def remove_timer(self, timer_id: int) -> None:
@@ -152,8 +146,6 @@ class TimerManager:
         """Resume all non-finished timers."""
         for timer in self.timers.values():
             if not timer.finished:
-                if not timer.running:
-                    timer.start_at = time.time() - (timer.duration - timer.remaining)
                 timer.running = True
 
     def remove_all(self) -> None:
@@ -166,7 +158,6 @@ class TimerManager:
             timer.remaining = timer.duration
             timer.running = True
             timer.finished = False
-            timer.start_at = time.time()
 
     def running_count(self) -> int:
         """Return the number of running timers."""
@@ -191,7 +182,6 @@ class TimerManager:
             timer.remaining = timer.duration
             timer.running = True
             timer.finished = False
-            timer.start_at = time.time()
 
 
     def save_state(self, path: str | Path) -> None:
