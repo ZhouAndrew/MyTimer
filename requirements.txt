@@ -9,3 +9,4 @@ rich
 psutil
 websockets
 pytest-cov
+PyQt6
