@@ -9,7 +9,9 @@ from .gui_tray import TrayIcon
 def main() -> None:
     app = QtWidgets.QApplication([])
     window = MainWindow()
-    TrayIcon(window, app)
+    tray = TrayIcon(window, app)
+    # keep a reference to avoid premature garbage collection
+    app.tray = tray
     window.show()
     app.exec()
 

@@ -121,15 +121,17 @@ class TimerManager:
     def pause_timer(self, timer_id: int) -> None:
         """Pause the specified timer."""
         timer = self.timers.get(timer_id)
-        if timer and not timer.finished:
+        if timer and not timer.finished and timer.running:
             timer.remaining = timer.remaining_now()
             timer.running = False
+            timer.start_at = None
 
     def resume_timer(self, timer_id: int) -> None:
         """Resume a paused timer."""
         timer = self.timers.get(timer_id)
-        if timer and not timer.finished:
+        if timer and not timer.finished and not timer.running:
             timer.running = True
+            timer.start_at = time.time()
 
     def remove_timer(self, timer_id: int) -> None:
         """Remove a timer from the registry."""
@@ -138,15 +140,17 @@ class TimerManager:
     def pause_all(self) -> None:
         """Pause all running timers."""
         for timer in self.timers.values():
-            if not timer.finished:
+            if not timer.finished and timer.running:
                 timer.remaining = timer.remaining_now()
                 timer.running = False
+                timer.start_at = None
                 
     def resume_all(self) -> None:
         """Resume all non-finished timers."""
         for timer in self.timers.values():
-            if not timer.finished:
+            if not timer.finished and not timer.running:
                 timer.running = True
+                timer.start_at = time.time()
 
     def remove_all(self) -> None:
         """Remove all timers from the manager."""
@@ -158,6 +162,7 @@ class TimerManager:
             timer.remaining = timer.duration
             timer.running = True
             timer.finished = False
+            timer.start_at = time.time()
 
     def running_count(self) -> int:
         """Return the number of running timers."""
@@ -182,6 +187,7 @@ class TimerManager:
             timer.remaining = timer.duration
             timer.running = True
             timer.finished = False
+            timer.start_at = time.time()
 
 
     def save_state(self, path: str | Path) -> None:
