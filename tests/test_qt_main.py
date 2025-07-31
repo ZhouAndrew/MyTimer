@@ -1,6 +1,6 @@
 import os
 import pytest
-pytest.importorskip("PyQt6.QtWidgets")
+pytest.importorskip("PyQt6.QtWidgets", exc_type=ImportError)
 from PyQt6 import QtWidgets
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')

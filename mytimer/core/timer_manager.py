@@ -41,6 +41,8 @@ class Timer:
             raise ValueError("seconds must be non-negative")
         if self.running and not self.finished:
             self.remaining = max(0.0, self.remaining - seconds)
+            if self.start_at is not None:
+                self.start_at -= seconds
         if self.running and self.remaining_now() <= 0:
             self.remaining = 0
             self.finished = True
