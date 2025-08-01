@@ -39,8 +39,20 @@ class Timer:
         """Simulate elapsing ``seconds`` of time for compatibility."""
         if seconds < 0:
             raise ValueError("seconds must be non-negative")
-        if self.running and not self.finished:
+
+        if not self.running or self.finished:
+            return
+
+        if self.start_at is not None:
+            # Fast-forward the start timestamp so the timer appears to have
+            # progressed by ``seconds`` when computing ``remaining_now``.
+            self.start_at -= seconds
+            self.remaining = max(0.0, self.duration - (time.time() - self.start_at))
+        else:
+            # Fallback for timers that do not track ``start_at``; simply
+            # decrease the stored remaining value.
             self.remaining = max(0.0, self.remaining - seconds)
+
             if self.start_at is not None:
                 self.start_at -= seconds
         if self.running and self.remaining_now() <= 0:
@@ -132,8 +144,9 @@ class TimerManager:
         """Resume a paused timer."""
         timer = self.timers.get(timer_id)
         if timer and not timer.finished and not timer.running:
+            elapsed = timer.duration - timer.remaining
+            timer.start_at = time.time() - elapsed
             timer.running = True
-            timer.start_at = time.time()
 
     def remove_timer(self, timer_id: int) -> None:
         """Remove a timer from the registry."""
@@ -151,8 +164,9 @@ class TimerManager:
         """Resume all non-finished timers."""
         for timer in self.timers.values():
             if not timer.finished and not timer.running:
+                elapsed = timer.duration - timer.remaining
+                timer.start_at = time.time() - elapsed
                 timer.running = True
-                timer.start_at = time.time()
 
     def remove_all(self) -> None:
         """Remove all timers from the manager."""
