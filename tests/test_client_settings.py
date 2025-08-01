@@ -99,3 +99,10 @@ def test_import_export_json(tmp_path):
     assert loaded.auth_token == "tok"
     assert loaded.device_name == "name"
 
+
+def test_load_invalid_volume_returns_default(tmp_path):
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps({"volume": "loud"}))
+    settings = ClientSettings.load(path)
+    assert settings.volume == 1.0
+
