@@ -53,7 +53,9 @@ class Timer:
             # decrease the stored remaining value.
             self.remaining = max(0.0, self.remaining - seconds)
 
-        if self.remaining <= 0:
+            if self.start_at is not None:
+                self.start_at -= seconds
+        if self.running and self.remaining_now() <= 0:
             self.remaining = 0
             self.finished = True
             self.running = False

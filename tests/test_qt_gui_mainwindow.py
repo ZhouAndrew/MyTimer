@@ -1,7 +1,7 @@
 import os
 import time
 import pytest
-pytest.importorskip("PyQt6.QtWidgets")
+pytest.importorskip("PyQt6.QtWidgets", exc_type=ImportError)
 from PyQt6 import QtWidgets, QtCore
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
@@ -81,4 +81,20 @@ def test_create_timer_dialog(monkeypatch):
     win.create_timer_dialog()
     assert client.created == [3.0]
     assert win.tags['1'] == 'tag'
+
+
+def test_refresh_sorts_by_id(monkeypatch):
+    _patch_timer(monkeypatch)
+    now = time.time()
+    data = {
+        '2': {'duration': 1, 'start_at': now},
+        '1': {'duration': 1, 'start_at': now},
+    }
+    client = DummyClient(data)
+    sound = DummySound()
+    app = QtWidgets.QApplication([])
+    win = gui_mainwindow.MainWindow(client=client, sound=sound)
+    win.refresh()
+    ids = [win.table.item(i, 0).text() for i in range(win.table.rowCount())]
+    assert ids == ['1', '2']
 
