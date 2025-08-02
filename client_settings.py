@@ -35,6 +35,11 @@ class ClientSettings:
         except (json.JSONDecodeError, OSError):
             return cls()
 
+        try:
+            volume = float(data.get("volume", cls.volume))
+        except (TypeError, ValueError):
+            volume = cls.volume
+
         return cls(
             server_url=data.get("server_url", cls.server_url),
             notifications_enabled=data.get(
@@ -44,7 +49,7 @@ class ClientSettings:
             auth_token=data.get("auth_token"),
             device_name=data.get("device_name"),
             theme=data.get("theme", cls.theme),
-            volume=float(data.get("volume", cls.volume)),
+            volume=volume,
             mute=bool(data.get("mute", cls.mute)),
         )
 
