@@ -10,7 +10,7 @@ from typing import Iterable
 from client_settings import ClientSettings
 from . import server_discovery
 
-SETTINGS_PATH = Path.home() / ".timercli" / "settings.json"
+SETTINGS_PATH = Path.home() / ".timercli" / "settings.db"
 
 
 class CLISettings:

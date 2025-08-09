@@ -36,7 +36,7 @@ class TUIApp:
 
 def main(args: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="MyTimer TUI application")
-    default_url = ClientSettings.load(Path.home() / ".timercli" / "settings.json").server_url
+    default_url = ClientSettings.load(Path.home() / ".timercli" / "settings.db").server_url
     parser.add_argument("--url", default=default_url, help="API base URL")
     parser.add_argument("--once", action="store_true", help="Render one snapshot and exit")
     parser.add_argument(
@@ -47,10 +47,10 @@ def main(args: List[str] | None = None) -> None:
     parsed = parser.parse_args(args)
 
     url = parsed.url.rstrip("/")
-    settings = ClientSettings.load(Path.home() / ".timercli" / "settings.json")
+    settings = ClientSettings.load(Path.home() / ".timercli" / "settings.db")
     if url != settings.server_url:
         settings.server_url = url
-        settings.save(Path.home() / ".timercli" / "settings.json")
+        settings.save(Path.home() / ".timercli" / "settings.db")
     app = TUIApp(url, use_websocket=not parsed.no_ws)
     if parsed.once:
         print(asyncio.run(app.run_once()))

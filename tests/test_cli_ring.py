@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 import requests
 
+from client_settings import ClientSettings
 from mytimer.client.controller import _ring_if_needed
 
 
@@ -38,20 +39,20 @@ def start_server():
 def test_ring_if_needed(monkeypatch, tmp_path, start_server):
     config_dir = tmp_path / ".timercli"
     config_dir.mkdir()
-    settings = {
-        "notifications_enabled": True,
-        "notify_sound": "default",
-        "volume": 0.8,
-        "mute": False,
-    }
-    (config_dir / "settings.json").write_text(json.dumps(settings))
+    settings = ClientSettings(
+        notifications_enabled=True,
+        notify_sound="default",
+        volume=0.8,
+        mute=False,
+    )
+    settings.save(config_dir / "settings.db")
 
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
     monkeypatch.setattr(
         __import__("mytimer.client.controller", fromlist=["SETTINGS_PATH"]),
         "SETTINGS_PATH",
-        config_dir / "settings.json",
+        config_dir / "settings.db",
     )
 
     requests.post("http://127.0.0.1:8005/timers", params={"duration": 1}, timeout=5)
