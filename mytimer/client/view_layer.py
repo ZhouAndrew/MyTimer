@@ -199,16 +199,16 @@ class ClientViewLayer:
 
 def main(args: List[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Client view layer")
-    default_url = ClientSettings.load(Path.home() / ".timercli" / "settings.json").server_url
+    default_url = ClientSettings.load(Path.home() / ".timercli" / "settings.db").server_url
     parser.add_argument("--url", default=default_url, help="API base URL")
     parser.add_argument("--once", action="store_true", help="Render one snapshot and exit")
     parsed = parser.parse_args(args)
 
     url = parsed.url.rstrip("/")
-    settings = ClientSettings.load(Path.home() / ".timercli" / "settings.json")
+    settings = ClientSettings.load(Path.home() / ".timercli" / "settings.db")
     if url != settings.server_url:
         settings.server_url = url
-        settings.save(Path.home() / ".timercli" / "settings.json")
+        settings.save(Path.home() / ".timercli" / "settings.db")
     svc = SyncService(url)
     view = ClientViewLayer(svc)
     if parsed.once:

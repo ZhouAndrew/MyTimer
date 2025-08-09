@@ -47,7 +47,7 @@ COMMANDS: List[str] = [
     "q",
 ]
 
-SETTINGS_PATH = Path.home() / ".timercli" / "settings.json"
+SETTINGS_PATH = Path.home() / ".timercli" / "settings.db"
 
 
 def _load_settings() -> ClientSettings:

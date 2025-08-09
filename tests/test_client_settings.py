@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import sqlite3
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -8,7 +9,7 @@ from client_settings import ClientSettings
 
 
 def test_load_defaults_when_file_missing(tmp_path):
-    path = tmp_path / "settings.json"
+    path = tmp_path / "settings.db"
     settings = ClientSettings.load(path)
     assert settings.server_url == "http://127.0.0.1:8000"
     assert settings.notifications_enabled is True
@@ -21,7 +22,7 @@ def test_load_defaults_when_file_missing(tmp_path):
 
 
 def test_save_and_load(tmp_path):
-    path = tmp_path / "settings.json"
+    path = tmp_path / "settings.db"
     original = ClientSettings(
         server_url="http://example.com",
         notifications_enabled=False,
@@ -46,7 +47,7 @@ def test_save_and_load(tmp_path):
 
 
 def test_update_and_persistence(tmp_path):
-    path = tmp_path / "settings.json"
+    path = tmp_path / "settings.db"
     settings = ClientSettings()
 
     settings.update(
@@ -71,8 +72,12 @@ def test_update_and_persistence(tmp_path):
 
 
 def test_partial_file_uses_defaults(tmp_path):
-    path = tmp_path / "settings.json"
-    path.write_text(json.dumps({"server_url": "http://foo"}))
+    path = tmp_path / "settings.db"
+    conn = sqlite3.connect(path)
+    conn.execute("CREATE TABLE settings (id INTEGER PRIMARY KEY, server_url TEXT)")
+    conn.execute("INSERT INTO settings (id, server_url) VALUES (1, 'http://foo')")
+    conn.commit()
+    conn.close()
     settings = ClientSettings.load(path)
     assert settings.server_url == "http://foo"
     assert settings.notifications_enabled is True
